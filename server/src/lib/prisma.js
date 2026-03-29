@@ -7,7 +7,7 @@ const adapter = new PrismaMariaDb({
   host: "127.0.0.1",
   port: 3306,
   user: "root",
-  password: "gank",
+  password: "Baysaa0712",
   database: "chatapp",
   connectionLimit: 5,
 });
