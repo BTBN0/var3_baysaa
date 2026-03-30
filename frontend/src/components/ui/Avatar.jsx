@@ -3,12 +3,12 @@ export function Avatar({ user, size = 32, showStatus = false, status = 'offline'
   return (
     <div className="relative inline-flex flex-shrink-0">
       {user?.avatar ? (
-        <img src={user.avatar} alt={user.name} style={s}
+        <img src={user.avatar} alt={user.username || user.name} style={s}
           className="object-cover" />
       ) : (
         <div style={{ ...s, background: user?.bg || '#e8f1fb', color: user?.color || '#0071e3' }}
           className="flex items-center justify-center font-bold select-none flex-shrink-0">
-          {user?.initials || user?.name?.slice(0,2).toUpperCase() || '?'}
+          {user?.initials || user?.username?.slice(0,2).toUpperCase() || user?.name?.slice(0,2).toUpperCase() || '?'}
         </div>
       )}
       {showStatus && (

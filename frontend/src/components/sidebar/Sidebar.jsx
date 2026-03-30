@@ -33,7 +33,7 @@ function WorkspacePicker({ workspaces, active, onSelect, onCreate, onJoin }) {
   }
 
   return (
-    <div className="flex-shrink-0 border-b border-gray-100 dark:border-white/8">
+    <div className="flex-shrink-0 border-b border-gray-100/50 dark:border-white/[0.04]">
       <div className="flex items-center gap-1.5 overflow-x-auto px-3 py-2" style={{scrollbarWidth:'none'}}>
         {workspaces.map(ws => (
           <button key={ws.id} onClick={()=>onSelect(ws)} title={ws.name}
@@ -43,13 +43,13 @@ function WorkspacePicker({ workspaces, active, onSelect, onCreate, onJoin }) {
           </button>
         ))}
         <button onClick={()=>setShowNew(v=>!v)}
-          className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-accent hover:bg-accent/10 transition-all flex-shrink-0 border border-dashed border-gray-300 dark:border-white/15">
+          className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-accent hover:bg-accent/10 transition-all flex-shrink-0 border border-dashed border-gray-300 dark:border-white/5">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </button>
       </div>
 
       {showNew && (
-        <div className="mx-3 mb-2 p-3 bg-gray-50 dark:bg-dark-700 rounded-2xl border border-gray-200 dark:border-white/10 anim-slide-down">
+        <div className="mx-3 mb-2 p-3 bg-gray-50 dark:bg-dark-700 rounded-2xl border border-gray-200 dark:border-white/5 anim-slide-down">
           <div className="flex gap-1 mb-3">
             {['create','join'].map(t=>(
               <button key={t} onClick={()=>setTab(t)}
@@ -78,7 +78,7 @@ function WorkspacePicker({ workspaces, active, onSelect, onCreate, onJoin }) {
 
 export default function Sidebar({ onClose, onProfileOpen, onStoryOpen }) {
   const { user, logout, profile } = useAuth()
-  const { workspaces, activeWorkspace, selectWorkspace, channels, activeChannel, selectChannel, createWorkspace, joinWorkspace, createChannel, members } = useWorkspace()
+  const { workspaces, activeWorkspace, selectWorkspace, channels, activeChannel, selectChannel, createWorkspace, joinWorkspace, createChannel, members, onlineUsers } = useWorkspace()
   const { setActiveDM } = useChat()
   const { theme, toggle } = useTheme()
   const { allStories } = useStory()
@@ -87,10 +87,19 @@ export default function Sidebar({ onClose, onProfileOpen, onStoryOpen }) {
   const [newChName, setNewChName] = useState('')
 
   const skin = SKINS[profile?.skinIdx ?? 0] || SKINS[0]
-  const initials = user?.initials || user?.username?.slice(0,2).toUpperCase() || 'YO'
+
+  const isOnline = (u) => {
+    if (onlineUsers?.has(u.id)) return true
+    // lastSeen 3 минутын дотор бол online гэж үз
+    if (u.lastSeen) {
+      return (Date.now() - new Date(u.lastSeen).getTime()) < 3 * 60 * 1000
+    }
+    return false
+  }
+  const initials = user?.username?.slice(0,2).toUpperCase() || user?.initials || 'YO'
 
   const filtered = search ? channels.filter(c=>c.name.toLowerCase().includes(search.toLowerCase())) : channels
-  const dmMembers = members.filter(m => m.userId !== user?.id)
+  const dmMembers = members.filter(m => m.id !== user?.id)
 
   const handleCreateChannel = async (e) => {
     e.preventDefault()
@@ -100,21 +109,32 @@ export default function Sidebar({ onClose, onProfileOpen, onStoryOpen }) {
   }
 
   const handleDM = (member) => {
-    setActiveDM(member.user || member)
+    setActiveDM(member)
     onClose?.()
   }
 
   return (
-    <aside className="flex flex-col h-full w-64 bg-white dark:bg-dark-800 border-r border-gray-200 dark:border-white/8">
+    <aside className="flex flex-col h-full w-64 bg-white dark:bg-dark-800 border-r border-gray-200 dark:border-white/5">
 
       {/* Brand */}
-      <div className="flex items-center gap-2.5 px-4 h-14 border-b border-gray-100 dark:border-white/8 flex-shrink-0">
-        <div className="w-7 h-7 rounded-lg bg-gray-900 dark:bg-white flex items-center justify-center flex-shrink-0">
-          <svg width="13" height="15" viewBox="0 0 814 1000" fill="white" className="dark:invert">
-            <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-42.3-150.3-109.2c-49.5-71.8-93.7-184.7-93.7-292.9 0-161 105-246 209-246 55.6 0 101.5 37.1 135.3 37.1 32.5 0 83.2-39.2 147-39.2 23.9 0 108.2 2.2 168.3 84zM549.4 35.2c25.4-30.3 44.7-72.5 44.7-114.7 0-5.8-.6-11.7-1.9-16.3-42.3 1.6-91.4 28.3-121 59.2-23.5 25.1-46 67.2-46 110 0 6.4 1.3 12.8 1.9 14.7 2.6.6 6.4 1.3 10.3 1.3 37.4-.1 84.2-25.7 112-54.2z"/>
+      <div className="flex items-center gap-2.5 px-4 h-14 border-b border-gray-100/50 dark:border-white/[0.04] flex-shrink-0">
+        <div className="w-7 h-7 rounded-xl flex-shrink-0 overflow-hidden"
+          style={{background:'linear-gradient(135deg,#a855f7,#6366f1,#3b82f6)'}}>
+          <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="14" cy="14" r="6" fill="rgba(255,255,255,0.25)"/>
+            <circle cx="14" cy="14" r="3" fill="rgba(255,255,255,0.9)"/>
+            <circle cx="14" cy="7"  r="1.5" fill="rgba(255,255,255,0.6)"/>
+            <circle cx="14" cy="21" r="1.5" fill="rgba(255,255,255,0.6)"/>
+            <circle cx="7"  cy="14" r="1.5" fill="rgba(255,255,255,0.6)"/>
+            <circle cx="21" cy="14" r="1.5" fill="rgba(255,255,255,0.6)"/>
           </svg>
         </div>
-        <span className="font-bold text-sm tracking-tight text-gray-900 dark:text-gray-100 flex-1 truncate">{activeWorkspace?.name || 'Czilla'}</span>
+        <span className="flex-1 truncate font-black tracking-widest dark:text-white text-gray-900"
+          style={{
+            fontFamily:"'Syne',sans-serif",
+            fontSize:'15px',
+            letterSpacing:'0.18em',
+          }}>AURA</span>
         <button onClick={toggle} className="btn-ghost px-2 py-1.5 text-xs">
           {theme==='dark'
             ? <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -176,8 +196,10 @@ export default function Sidebar({ onClose, onProfileOpen, onStoryOpen }) {
                     <StoryRing user={{ initials: u.username?.slice(0,2).toUpperCase(), id: u.id, bg:'#e8f1fb', color:'#0071e3' }}
                       size={20} hasStory={!!storyGroup} seen={storyGroup?.seen ?? true}
                       onClick={(e)=>{ if(storyGroup){e.stopPropagation();onStoryOpen?.({userId:u.id})} }}/>
+                    <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-dark-800 ${isOnline(u) ? 'bg-green-400' : 'bg-gray-300 dark:bg-gray-600'}`}/>
                   </div>
                   <span className="flex-1 truncate text-left text-sm">{u.username}</span>
+                  {isOnline(u) && <span className="text-[9px] text-green-500 font-medium flex-shrink-0">●</span>}
                 </button>
               )
             })}
@@ -186,18 +208,27 @@ export default function Sidebar({ onClose, onProfileOpen, onStoryOpen }) {
       </nav>
 
       {/* User bar */}
-      <div className="flex items-center gap-2 px-3 py-2.5 border-t border-gray-100 dark:border-white/15 flex-shrink-0">
+      <div className="flex items-center gap-2 px-3 py-2.5 border-t border-gray-100/50 dark:border-white/[0.04] flex-shrink-0">
         <button onClick={onProfileOpen} className="flex items-center gap-2 flex-1 min-w-0 hover:opacity-80 transition-opacity">
           <div className="relative flex-shrink-0">
             <div className="w-[30px] h-[30px] rounded-full flex items-center justify-center overflow-hidden text-xs font-bold select-none"
               style={{ background: skin.bg, color: skin.fg, border: `2px solid ${skin.fg}55` }}>
               {initials}
             </div>
-            <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-green-400 border-2 border-white dark:border-[#1c1c1e]"/>
+            {(() => {
+              const st = profile?.status || 'online'
+              const dotColors = { online:'bg-green-400', away:'bg-amber-400', busy:'bg-red-400', offline:'bg-gray-400' }
+              return <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-[#1c1c1e] ${dotColors[st]}`}/>
+            })()}
           </div>
           <div className="flex-1 min-w-0 text-left">
-            <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">{profile?.name || user?.username}</p>
-            <p className="text-[10px] text-green-500">● Online</p>
+            <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">{user?.username}</p>
+            {(() => {
+              const st = profile?.status || 'online'
+              const colors = { online:'text-green-500', away:'text-amber-500', busy:'text-red-500', offline:'text-gray-400' }
+              const labels = { online:'Online', away:'Away', busy:'Busy', offline:'Offline' }
+              return <p className={`text-[10px] font-medium ${colors[st]}`}>● {labels[st]}</p>
+            })()}
           </div>
         </button>
         <button onClick={logout} title="Гарах" className="text-gray-400 hover:text-red-500 transition-colors p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20">

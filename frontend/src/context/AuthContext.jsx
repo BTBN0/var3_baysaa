@@ -5,48 +5,46 @@ import { connectSocket, disconnectSocket } from '../lib/socket'
 const Ctx = createContext(null)
 
 export function AuthProvider({ children }) {
-  const [user,    setUser]    = useState(() => { try { return JSON.parse(localStorage.getItem('cz-user')) } catch { return null } })
-  const [profile, setProfile] = useState(() => { try { return JSON.parse(localStorage.getItem('cz-profile')) || {} } catch { return {} } })
+  const [user,    setUser]    = useState(null)
+  const [profile, setProfile] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('cz-profile')) || {} } catch { return {} }
+  })
   const [loading, setLoading] = useState(false)
   const [ready,   setReady]   = useState(false)
 
-  // Restore session on mount
+  // Аппликейшн ачаалахад сессийг сэргээнэ
   useEffect(() => {
-    const token = localStorage.getItem('cz-token')
+    const token  = localStorage.getItem('cz-token')
     const cached = localStorage.getItem('cz-user')
     if (token && cached) {
-      connectSocket(token)
+      try {
+        const u = JSON.parse(cached)
+        u.initials = (u.username || '??').slice(0, 2).toUpperCase()
+        setUser(u)
+        connectSocket(token)
+      } catch {}
+      // Серверээс шинэчилнэ
       authApi.me()
         .then(({ data }) => {
-          // Backend: { ok: true, data: user }
-          const u = data.data || data.user
-          if (u?.id) persistUser(u)
+          const u = data.data
+          if (u?.id) {
+            u.initials = (u.username || '??').slice(0, 2).toUpperCase()
+            setUser(u)
+            localStorage.setItem('cz-user', JSON.stringify(u))
+          }
         })
         .catch(() => {
-          // Token invalid — keep cached user
+          // Token хүчингүй болсон бол гаргана
+          localStorage.removeItem('cz-token')
+          localStorage.removeItem('cz-user')
+          setUser(null)
+          disconnectSocket()
         })
         .finally(() => setReady(true))
     } else {
       setReady(true)
     }
   }, [])
-
-  const persistUser = (u, token) => {
-    if (u && u.id) {
-      // Add initials helper (backend doesn't send this)
-      u.initials = (u.username || u.email || '??').slice(0, 2).toUpperCase()
-    }
-    setUser(u)
-    if (u) {
-      localStorage.setItem('cz-user', JSON.stringify(u))
-      if (token) localStorage.setItem('cz-token', token)
-      connectSocket(token || localStorage.getItem('cz-token'))
-    } else {
-      localStorage.removeItem('cz-user')
-      localStorage.removeItem('cz-token')
-      disconnectSocket()
-    }
-  }
 
   const saveProfile = useCallback((updates) => {
     setProfile(prev => {
@@ -62,14 +60,21 @@ export function AuthProvider({ children }) {
       const { data } = await authApi.login({ email, password })
       // Backend: { ok: true, data: { token, user } }
       const token = data.data?.token
-      const user  = data.data?.user
-      if (!token) return { ok: false, error: 'Token хүлээж аваагүй' }
-      persistUser(user, token)
+      const u     = data.data?.user
+      if (!token || !u) {
+        return { ok: false, error: data.message || 'Нэвтрэлт амжилтгүй' }
+      }
+      u.initials = (u.username || '??').slice(0, 2).toUpperCase()
+      localStorage.setItem('cz-token', token)
+      localStorage.setItem('cz-user', JSON.stringify(u))
+      setUser(u)
+      connectSocket(token)
       return { ok: true }
     } catch (err) {
-      const msg = err.response?.data?.message || 'Нэвтрэх амжилтгүй'
-      return { ok: false, error: msg }
-    } finally { setLoading(false) }
+      return { ok: false, error: err.response?.data?.message || 'Нэвтрэх амжилтгүй' }
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   const register = useCallback(async (username, email, password) => {
@@ -78,33 +83,66 @@ export function AuthProvider({ children }) {
       const { data } = await authApi.register({ username, email, password })
       // Backend: { ok: true, data: { token, user } }
       const token = data.data?.token
-      const user  = data.data?.user
-      if (!token) return { ok: false, error: 'Token хүлээж аваагүй' }
-      persistUser(user, token)
+      const u     = data.data?.user
+      if (!token || !u) {
+        return { ok: false, error: data.message || 'Бүртгэл амжилтгүй' }
+      }
+      u.initials = (u.username || '??').slice(0, 2).toUpperCase()
+      localStorage.setItem('cz-token', token)
+      localStorage.setItem('cz-user', JSON.stringify(u))
+      setUser(u)
+      connectSocket(token)
       return { ok: true }
     } catch (err) {
-      const msg = err.response?.data?.message || 'Бүртгэл амжилтгүй'
-      return { ok: false, error: msg }
-    } finally { setLoading(false) }
+      return { ok: false, error: err.response?.data?.message || 'Бүртгэл амжилтгүй' }
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
-  const logout = useCallback(async () => {
-    try { await authApi.logout() } catch {}
-    persistUser(null)
+  const logout = useCallback(() => {
+    localStorage.removeItem('cz-token')
+    localStorage.removeItem('cz-user')
+    setUser(null)
+    disconnectSocket()
   }, [])
 
-  const updateProfile = useCallback(async (data) => {
+  const updateProfile = useCallback(async (formData) => {
     try {
-      const res = await authApi.updateProfile(data)
-      persistUser(res.data.user || res.data)
+      const res = await authApi.updateProfile(formData)
+      const updated = res.data.data
+      if (updated?.id) {
+        updated.initials = (updated.username || '??').slice(0, 2).toUpperCase()
+        setUser(updated)
+        localStorage.setItem('cz-user', JSON.stringify(updated))
+      }
       return { ok: true }
     } catch (err) {
       return { ok: false, error: err.response?.data?.message || 'Алдаа гарлаа' }
     }
   }, [])
 
+  const updateAvatar = useCallback(async (file) => {
+    try {
+      const res = await authApi.updateAvatar(file)
+      const updated = res.data.data
+      if (updated?.id) {
+        updated.initials = (updated.username || '??').slice(0, 2).toUpperCase()
+        setUser(updated)
+        localStorage.setItem('cz-user', JSON.stringify(updated))
+      }
+      return { ok: true, avatarUrl: updated?.avatar }
+    } catch (err) {
+      return { ok: false, error: err.response?.data?.message || 'Алдаа гарлаа' }
+    }
+  }, [])
+
   return (
-    <Ctx.Provider value={{ user, profile, loading, ready, login, register, logout, saveProfile, updateProfile }}>
+    <Ctx.Provider value={{
+      user, profile, loading, ready,
+      login, register, logout,
+      saveProfile, updateProfile, updateAvatar,
+    }}>
       {children}
     </Ctx.Provider>
   )

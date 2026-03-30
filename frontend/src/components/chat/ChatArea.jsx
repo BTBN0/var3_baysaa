@@ -25,6 +25,7 @@ export default function ChatArea({ onMenuOpen, onAIOpen, aiOpen, onStoryOpen }) 
   const { currentMessages, currentDMs, currentTyping, activeDM, sendMessage, uploadFile, startTyping, uploading, uploadPct } = useChat()
   const [text, setText]               = useState('')
   const [dragOver, setDragOver]       = useState(false)
+  const [showEmoji, setShowEmoji]     = useState(false)
   const [storyPanelOpen, setStoryPanelOpen] = useState(false)
   const [addingStory, setAddingStory] = useState(false)
   const endRef  = useRef(null)
@@ -32,26 +33,6 @@ export default function ChatArea({ onMenuOpen, onAIOpen, aiOpen, onStoryOpen }) 
   const fileRef  = useRef(null)
 
   const msgs = activeDM ? currentDMs : currentMessages
-
-  // Empty state — no workspace or channel yet
-  if (!activeChannel && !activeDM) {
-    return (
-      <div className="flex flex-col flex-1 min-w-0 items-center justify-center bg-white dark:bg-black gap-4">
-        <canvas id="cursor-canvas" style={{display:'none'}}/>
-        <div className="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-dark-700 flex items-center justify-center text-3xl">💬</div>
-        <div className="text-center">
-          <p className="text-base font-semibold text-gray-700 dark:text-gray-300">Workspace сонгоно уу</p>
-          <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Sidebar-аас workspace үүсгэх эсвэл нэгдэх</p>
-        </div>
-        <button onClick={onMenuOpen} className="md:hidden flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent text-white text-sm font-semibold">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
-          </svg>
-          Sidebar нээх
-        </button>
-      </div>
-    )
-  }
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [msgs.length, currentTyping.length])
 
@@ -72,8 +53,29 @@ export default function ChatArea({ onMenuOpen, onAIOpen, aiOpen, onStoryOpen }) 
     await uploadFile(files[0])
   }
 
+  const insertEmoji = (e) => {
+    setText(prev => prev + e)
+    setShowEmoji(false)
+    inputRef.current?.focus()
+  }
+
   const title = activeDM ? (activeDM.username || activeDM.name) : (activeChannel?.name || '...')
   const isChannel = !activeDM
+
+  if (!activeChannel && !activeDM) {
+    return (
+      <div className="flex flex-col flex-1 min-w-0 items-center justify-center bg-white dark:bg-black gap-4">
+        <div className="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-dark-700 flex items-center justify-center text-3xl">💬</div>
+        <div className="text-center">
+          <p className="text-base font-semibold text-gray-700 dark:text-gray-300">Workspace сонгоно уу</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Sidebar-аас workspace үүсгэх эсвэл нэгдэх</p>
+        </div>
+        <button onClick={onMenuOpen} className="md:hidden flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent text-white text-sm font-semibold">
+          Sidebar нээх
+        </button>
+      </div>
+    )
+  }
 
   const grouped = msgs.map((msg, i) => {
     const prev = msgs[i-1]
@@ -91,7 +93,7 @@ export default function ChatArea({ onMenuOpen, onAIOpen, aiOpen, onStoryOpen }) 
       onDrop={e=>{e.preventDefault();setDragOver(false);handleFile(e.dataTransfer.files)}}>
 
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 h-14 border-b border-gray-100 dark:border-white/8 flex-shrink-0 bg-white dark:bg-dark-800">
+      <div className="flex items-center gap-3 px-4 h-14 border-b border-gray-100/50 dark:border-white/[0.06] flex-shrink-0 bg-white dark:bg-dark-800">
         <button onClick={onMenuOpen} className="md:hidden btn-ghost px-2">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
@@ -137,7 +139,8 @@ export default function ChatArea({ onMenuOpen, onAIOpen, aiOpen, onStoryOpen }) 
 
       {/* Messages */}
       <div className={`flex-1 overflow-y-auto py-4 relative ${dragOver?'ring-2 ring-inset ring-accent/40 bg-accent/5':''}`}>
-        {dragOver && (
+        {showEmoji && <div className="fixed inset-0 z-40" onClick={()=>setShowEmoji(false)}/>}
+      {dragOver && (
           <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
             <div className="flex flex-col items-center gap-2 text-accent">
               <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -160,7 +163,7 @@ export default function ChatArea({ onMenuOpen, onAIOpen, aiOpen, onStoryOpen }) 
 
       {/* Upload progress */}
       {uploading && (
-        <div className="px-4 py-2 border-t border-gray-100 dark:border-white/8">
+        <div className="px-4 py-2 border-t border-gray-100/50 dark:border-white/[0.04]">
           <div className="flex items-center gap-3">
             <svg className="w-4 h-4 text-accent animate-spin-slow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" strokeOpacity=".3"/><path d="M12 2a10 10 0 0110 10"/></svg>
             <div className="flex-1 h-1.5 bg-gray-200 dark:bg-dark-600 rounded-full overflow-hidden">
@@ -172,16 +175,34 @@ export default function ChatArea({ onMenuOpen, onAIOpen, aiOpen, onStoryOpen }) 
       )}
 
       {/* Compose */}
-      <div className="px-4 pb-4 pt-2 flex-shrink-0 border-t border-gray-100 dark:border-white/8">
-        <div className={`flex flex-col rounded-2xl border transition-all ${text?'border-accent/50 shadow-sm shadow-accent/10':'border-gray-200 dark:border-white/10'} bg-gray-50 dark:bg-dark-700`}>
-          <div className="flex items-center gap-1 px-3 pt-2 pb-1 border-b border-gray-100 dark:border-white/8">
+      <div className="px-4 pb-4 pt-2 flex-shrink-0 border-t border-gray-100/50 dark:border-white/[0.04]">
+        <div className={`flex flex-col rounded-2xl border transition-all ${text?'border-accent/50 shadow-sm shadow-accent/10':'border-gray-200 dark:border-white/[0.06]'} bg-gray-50 dark:bg-dark-700`}>
+          <div className="flex items-center gap-1 px-3 pt-2 pb-1 border-b border-gray-100/50 dark:border-white/[0.06]">
             <button onClick={()=>fileRef.current?.click()} className="btn-ghost px-2 py-1.5 text-gray-400 hover:text-accent" title="Файл">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
             </button>
             <input ref={fileRef} type="file" className="hidden" onChange={e=>handleFile(e.target.files)}/>
-            <button className="btn-ghost px-2 py-1.5 text-gray-400" title="Emoji">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-            </button>
+            <div className="relative">
+              <button onClick={()=>setShowEmoji(v=>!v)} className={`btn-ghost px-2 py-1.5 transition-colors ${showEmoji?'text-accent':'text-gray-400 hover:text-accent'}`} title="Emoji">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+              </button>
+              {showEmoji && (
+                <div className="absolute bottom-full left-0 mb-2 z-50 bg-white dark:bg-dark-800 border border-gray-200 dark:border-white/5 rounded-2xl shadow-xl p-3 w-72">
+                  <div className="grid grid-cols-8 gap-1">
+                    {['😀','😂','🥹','😍','🤩','😎','🥳','🤔','😅','😭','😡','🤯','😴','🤗','🫡','🥸',
+                      '👍','👎','❤️','🔥','✅','⭐','🎉','💯','🙏','👏','💪','🤝','🫶','💀','👀','🫠',
+                      '🐶','🐱','🐭','🦊','🐻','🐼','🐨','🦁','🐸','🐵','🦄','🐙',
+                      '🍕','🍔','🍟','🌮','🍜','🍣','🍩','🎂','🍎','🍊','🍋','🍇',
+                      '⚽','🏀','🎮','🎯','🎵','🎨','📚','💻','📱','🚀','✈️','🏠'].map(e => (
+                      <button key={e} onClick={()=>insertEmoji(e)}
+                        className="w-8 h-8 flex items-center justify-center text-lg hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg transition-colors hover:scale-125">
+                        {e}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
           <textarea ref={inputRef}
             className="px-4 pt-2.5 pb-2 bg-transparent text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-600 resize-none focus:outline-none min-h-[48px] max-h-36"

@@ -14,7 +14,10 @@ api.interceptors.request.use(cfg => {
 api.interceptors.response.use(
   r => r,
   err => {
-    if (err.response?.status === 401) {
+    // Login/register endpoint-д 401 ирсэн бол reload хийхгүй — алдааг component-д дамжуулна
+    const url = err.config?.url || ''
+    const isAuthEndpoint = url.includes('/auth/login') || url.includes('/auth/register')
+    if (err.response?.status === 401 && !isAuthEndpoint) {
       localStorage.removeItem('cz-token')
       localStorage.removeItem('cz-user')
       window.location.reload()

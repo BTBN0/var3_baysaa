@@ -107,7 +107,7 @@ function Shell() {
       )}
 
       {/* Mobile tab bar */}
-      <nav className="fixed bottom-0 left-0 right-0 h-14 bg-white dark:bg-dark-800 border-t border-gray-200 dark:border-white/8 flex md:hidden z-30"
+      <nav className="fixed bottom-0 left-0 right-0 h-14 bg-white dark:bg-dark-800 border-t border-gray-200 dark:border-white/5 flex md:hidden z-30"
         style={{ paddingBottom: 'env(safe-area-inset-bottom,0)' }}>
         {[
           { icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="10" rx="1"/></svg>, label: 'Channels', action: () => setSidebarOpen(true) },

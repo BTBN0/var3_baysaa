@@ -14,28 +14,32 @@ export default function AuthPage() {
   const [mode, setMode]     = useState('login')
   const [form, setForm]     = useState({ username: '', email: '', password: '' })
   const [showPw, setShowPw] = useState(false)
-  const [error, setError]   = useState('')
+  const [error,   setError]   = useState('')
+  const [success, setSuccess] = useState('')
 
-  const set = (k, v) => { setForm(f => ({ ...f, [k]: v })); setError('') }
+  const set = (k, v) => { setForm(f => ({ ...f, [k]: v })); setError(''); setSuccess('') }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    setSuccess('')
     if (mode === 'register') {
-      if (!form.username.trim())        return setError('Username оруулна уу.')
-      if (!form.email.includes('@'))    return setError('Имэйл буруу байна.')
-      if (form.password.length < 6)     return setError('Нууц үг 6+ тэмдэгт байх ёстой.')
+      if (!form.username.trim())     return setError('Username оруулна уу.')
+      if (!form.email.includes('@')) return setError('Имэйл буруу байна.')
+      if (form.password.length < 6)  return setError('Нууц үг 6+ тэмдэгт байх ёстой.')
       const r = await register(form.username, form.email, form.password)
-      if (!r.ok) setError(r.error)
+      if (!r.ok) setError(r.error || 'Бүртгэл амжилтгүй.')
+      else setSuccess('Бүртгэл амжилттай! Тавтай морил 🎉')
     } else {
-      if (!form.email.includes('@'))  return setError('Имэйл буруу байна.')
-      if (!form.password)             return setError('Нууц үгээ оруулна уу.')
+      if (!form.email.includes('@')) return setError('Имэйл буруу байна.')
+      if (!form.password)            return setError('Нууц үгээ оруулна уу.')
       const r = await login(form.email, form.password)
-      if (!r.ok) setError(r.error)
+      if (!r.ok) setError(r.error || 'Нууц үг буруу байна.')
+      else setSuccess('Амжилттай нэвтэрлээ!')
     }
   }
 
-  const switchMode = (m) => { setMode(m); setForm({ username:'', email:'', password:'' }); setError('') }
+  const switchMode = (m) => { setMode(m); setForm({ username:'', email:'', password:'' }); setError(''); setSuccess('') }
 
   return (
     <div className="min-h-dvh flex items-center justify-center bg-gray-50 dark:bg-black p-4 relative">
@@ -57,55 +61,106 @@ export default function AuthPage() {
                       border border-gray-200 dark:border-white/8 animate-fade-up">
 
         {/* Left — branding */}
-        <div className="hidden md:flex flex-col justify-between flex-1 bg-gray-900 dark:bg-dark-900 p-12 relative overflow-hidden">
-          <div className="absolute inset-0 pointer-events-none"
-            style={{ background: 'radial-gradient(ellipse at 30% 40%,rgba(0,113,227,.2) 0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(48,209,88,.1) 0%,transparent 50%)' }} />
+        <div className="hidden md:flex flex-col justify-between flex-1 p-12 relative overflow-hidden"
+          style={{background:'linear-gradient(145deg,#0d0d1a 0%,#0f0a1e 40%,#0a1628 100%)'}}>
 
-          <div className="relative z-10">
-            <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center mb-6">
-              <svg width="22" height="26" viewBox="0 0 814 1000" fill="white">
-                <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-42.3-150.3-109.2c-49.5-71.8-93.7-184.7-93.7-292.9 0-161 105-246 209-246 55.6 0 101.5 37.1 135.3 37.1 32.5 0 83.2-39.2 147-39.2 23.9 0 108.2 2.2 168.3 84zM549.4 35.2c25.4-30.3 44.7-72.5 44.7-114.7 0-5.8-.6-11.7-1.9-16.3-42.3 1.6-91.4 28.3-121 59.2-23.5 25.1-46 67.2-46 110 0 6.4 1.3 12.8 1.9 14.7 2.6.6 6.4 1.3 10.3 1.3 37.4-.1 84.2-25.7 112-54.2z"/>
-              </svg>
-            </div>
-            <h1 className="text-4xl font-black text-white tracking-tight leading-none mb-3" style={{fontFamily:'Syne,sans-serif'}}>
-              Czilla
-            </h1>
-            <p className="text-sm text-white/45 mb-10">Design workspace for modern teams</p>
-            <div className="space-y-3">
-              {[
-                { icon: '⚡', text: 'Real-time messaging via Socket.IO' },
-                { icon: '📁', text: 'File upload & sharing' },
-                { icon: '🔔', text: 'Smart notifications' },
-                { icon: '🔒', text: 'Secure JWT authentication' },
-              ].map((f, i) => (
-                <div key={i} className="flex items-center gap-3 animate-fade-up" style={{ animationDelay: `${0.3 + i*0.08}s` }}>
-                  <div className="w-7 h-7 rounded-lg bg-white/8 border border-white/10 flex items-center justify-center text-sm flex-shrink-0">
-                    {f.icon}
-                  </div>
-                  <span className="text-sm text-white/55">{f.text}</span>
-                </div>
-              ))}
-            </div>
+          {/* Background glows */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div style={{position:'absolute',top:'15%',left:'20%',width:320,height:320,borderRadius:'50%',background:'radial-gradient(circle,rgba(168,85,247,0.18) 0%,transparent 70%)'}}/>
+            <div style={{position:'absolute',bottom:'20%',right:'10%',width:240,height:240,borderRadius:'50%',background:'radial-gradient(circle,rgba(99,102,241,0.15) 0%,transparent 70%)'}}/>
+            <div style={{position:'absolute',top:'50%',left:'50%',width:180,height:180,borderRadius:'50%',background:'radial-gradient(circle,rgba(59,130,246,0.1) 0%,transparent 70%)'}}/>
           </div>
 
-          {/* Mini chat mockup */}
-          <div className="relative z-10 bg-white/6 border border-white/10 rounded-2xl p-4 animate-fade-up" style={{animationDelay:'0.7s'}}>
-            <div className="flex gap-2 mb-3">
-              {['#ff5f57','#febc2e','#28c840'].map(c => <span key={c} className="w-2.5 h-2.5 rounded-full" style={{background:c}}/>)}
-              <span className="text-xs text-white/25 ml-2 font-mono"># general</span>
+          {/* Top: Logo + name + tagline + features */}
+          <div className="relative z-10">
+            {/* Logo */}
+            <div className="w-14 h-14 rounded-2xl mb-6 flex items-center justify-center"
+              style={{background:'linear-gradient(135deg,#a855f7,#6366f1,#3b82f6)'}}>
+              <svg viewBox="0 0 56 56" width="56" height="56" fill="none">
+                <circle cx="28" cy="28" r="11" fill="rgba(255,255,255,0.22)"/>
+                <circle cx="28" cy="28" r="5.5" fill="rgba(255,255,255,0.92)"/>
+                <circle cx="28" cy="13" r="3" fill="rgba(255,255,255,0.5)"/>
+                <circle cx="28" cy="43" r="3" fill="rgba(255,255,255,0.5)"/>
+                <circle cx="13" cy="28" r="3" fill="rgba(255,255,255,0.5)"/>
+                <circle cx="43" cy="28" r="3" fill="rgba(255,255,255,0.5)"/>
+                <circle cx="17.5" cy="17.5" r="2" fill="rgba(255,255,255,0.3)"/>
+                <circle cx="38.5" cy="38.5" r="2" fill="rgba(255,255,255,0.3)"/>
+                <circle cx="38.5" cy="17.5" r="2" fill="rgba(255,255,255,0.3)"/>
+                <circle cx="17.5" cy="38.5" r="2" fill="rgba(255,255,255,0.3)"/>
+              </svg>
             </div>
-            <div className="space-y-2">
-              <div className="flex items-end gap-2">
-                <div className="w-6 h-6 rounded-full bg-blue-500/30 flex items-center justify-center text-xs font-bold text-white/80">S</div>
-                <div className="bg-white/8 border border-white/10 rounded-xl rounded-bl-sm px-3 py-1.5 text-xs text-white/65">UI kit is ready ✓</div>
+
+            {/* AURA name */}
+            <h1 className="font-black text-white mb-1"
+              style={{fontFamily:"'Syne',sans-serif",fontSize:'48px',letterSpacing:'0.22em',lineHeight:1}}>
+              AURA
+            </h1>
+            <p className="text-sm mb-8" style={{color:'rgba(255,255,255,0.4)'}}>
+              Таны дотоод харилцааны орон зай
+            </p>
+
+
+          </div>
+
+          {/* Bottom: 2D chat illustration */}
+          <div className="relative z-10 animate-fade-up" style={{animationDelay:'0.6s'}}>
+            {/* Two people chatting illustration */}
+            <div className="relative flex items-end justify-center gap-6 mb-4" style={{height:120}}>
+              {/* Person 1 - left */}
+              <div className="flex flex-col items-center gap-1">
+                {/* Head */}
+                <div className="relative">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
+                    style={{background:'linear-gradient(135deg,#a855f7,#7c3aed)',color:'white'}}>A</div>
+                  <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-400 border-2"
+                    style={{borderColor:'#0d0d1a'}}/>
+                </div>
+                {/* Body */}
+                <div className="w-14 h-16 rounded-t-2xl flex items-center justify-center"
+                  style={{background:'linear-gradient(180deg,rgba(168,85,247,0.3),rgba(168,85,247,0.1))'}}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5">
+                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                  </svg>
+                </div>
               </div>
-              <div className="flex items-end gap-2 justify-end">
-                <div className="bg-accent/30 border border-accent/20 rounded-xl rounded-br-sm px-3 py-1.5 text-xs text-white/80">Looks great! 🚀</div>
+
+              {/* Chat bubbles in middle */}
+              <div className="flex flex-col gap-2 flex-1 max-w-[140px]">
+                <div className="self-start px-3 py-1.5 rounded-2xl rounded-bl-sm text-xs animate-fade-up"
+                  style={{background:'rgba(168,85,247,0.25)',color:'rgba(255,255,255,0.85)',animationDelay:'0.8s'}}>
+                  Сайн байна уу! 👋
+                </div>
+                <div className="self-end px-3 py-1.5 rounded-2xl rounded-br-sm text-xs animate-fade-up"
+                  style={{background:'rgba(99,102,241,0.3)',color:'rgba(255,255,255,0.85)',animationDelay:'1s'}}>
+                  Сайн! Та яаж байна? 😊
+                </div>
+                <div className="self-start flex gap-1 pl-2 animate-fade-up" style={{animationDelay:'1.2s'}}>
+                  {[0,1,2].map(i=><span key={i} className="w-1.5 h-1.5 rounded-full animate-bounce"
+                    style={{background:'rgba(168,85,247,0.6)',animationDelay:`${i*0.15}s`,animationDuration:'1s'}}/>)}
+                </div>
               </div>
-              <div className="flex gap-1 pl-8">
-                {[0,1,2].map(i => <span key={i} className="w-1.5 h-1.5 rounded-full bg-white/25 animate-pulse-dot" style={{animationDelay:`${i*0.2}s`}}/>)}
+
+              {/* Person 2 - right */}
+              <div className="flex flex-col items-center gap-1">
+                <div className="relative">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
+                    style={{background:'linear-gradient(135deg,#3b82f6,#6366f1)',color:'white'}}>B</div>
+                  <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-400 border-2"
+                    style={{borderColor:'#0d0d1a'}}/>
+                </div>
+                <div className="w-14 h-16 rounded-t-2xl flex items-center justify-center"
+                  style={{background:'linear-gradient(180deg,rgba(99,102,241,0.3),rgba(99,102,241,0.1))'}}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5">
+                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                  </svg>
+                </div>
               </div>
             </div>
+
+            {/* Bottom label */}
+            <p className="text-center text-xs" style={{color:'rgba(255,255,255,0.2)'}}>
+              AURA — Хаана ч, хэзээ ч холбогдоорой
+            </p>
           </div>
         </div>
 
@@ -179,6 +234,12 @@ export default function AuthPage() {
                 <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/40 text-red-600 dark:text-red-400 text-sm animate-slide-down">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                   {error}
+                </div>
+              )}
+              {success && (
+                <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800/40 text-green-600 dark:text-green-400 text-sm animate-slide-down">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>
+                  {success}
                 </div>
               )}
 

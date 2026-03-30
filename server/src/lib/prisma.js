@@ -10,6 +10,7 @@ const adapter = new PrismaMariaDb({
   password: "Baysaa0712",
   database: "chatapp",
   connectionLimit: 5,
+  charset: "utf8mb4",
 });
 
 const prisma = new PrismaClient({ adapter });

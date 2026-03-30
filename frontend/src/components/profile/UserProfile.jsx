@@ -20,67 +20,80 @@ const COVERS = [
 ]
 
 export const SKINS = [
-  { bg: '#FDDBB4', fg: '#8B5E3C' },
-  { bg: '#F5C99A', fg: '#7A4A2A' },
-  { bg: '#E8A87C', fg: '#6B3820' },
-  { bg: '#C68642', fg: '#3E1F00' },
-  { bg: '#8D5524', fg: '#FFD5A8' },
-  { bg: '#4A2912', fg: '#F5C99A' },
-  { bg: '#DBEAFE', fg: '#1D4ED8' },
-  { bg: '#EDE9FE', fg: '#7C3AED' },
-  { bg: '#FCE7F3', fg: '#BE185D' },
-  { bg: '#D1FAE5', fg: '#065F46' },
+  { bg: '#FDDBB4', fg: '#8B5E3C' }, { bg: '#F5C99A', fg: '#7A4A2A' },
+  { bg: '#E8A87C', fg: '#6B3820' }, { bg: '#C68642', fg: '#3E1F00' },
+  { bg: '#8D5524', fg: '#FFD5A8' }, { bg: '#4A2912', fg: '#F5C99A' },
+  { bg: '#DBEAFE', fg: '#1D4ED8' }, { bg: '#EDE9FE', fg: '#7C3AED' },
+  { bg: '#FCE7F3', fg: '#BE185D' }, { bg: '#D1FAE5', fg: '#065F46' },
 ]
 
-export default function UserProfile({ onClose }) {
-  const { user, logout, profile, saveProfile } = useAuth()
+const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:3001/api').replace('/api', '')
 
-  // Read persisted profile state, fall back to defaults
-  const [name,      setName]      = useState(profile.name      ?? user?.name  ?? '')
-  const [email,     setEmail]     = useState(profile.email     ?? user?.email ?? '')
+export default function UserProfile({ onClose }) {
+  const { user, logout, profile, saveProfile, updateProfile, updateAvatar } = useAuth()
+
+  const [username,  setUsername]  = useState(user?.username ?? '')
   const [bio,       setBio]       = useState(profile.bio       ?? '')
   const [status,    setStatus]    = useState(profile.status    ?? 'online')
   const [coverId,   setCoverId]   = useState(profile.coverId   ?? 'violet')
   const [skinIdx,   setSkinIdx]   = useState(profile.skinIdx   ?? 0)
-  const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl ?? null)
+  const [avatarUrl, setAvatarUrl] = useState(
+    user?.avatar
+      ? (user.avatar.startsWith('http') ? user.avatar : API_BASE + user.avatar)
+      : null
+  )
 
   const [saving,    setSaving]    = useState(false)
   const [saved,     setSaved]     = useState(false)
   const [editing,   setEditing]   = useState(false)
   const [showSkins, setShowSkins] = useState(false)
+  const [error,     setError]     = useState('')
+
+  // user өөрчлөгдөхөд (updateProfile дараа) input-ийг шинэчлэх
+  useEffect(() => {
+    if (user?.username) setUsername(user.username)
+  }, [user?.username])
 
   const avatarRef = useRef(null)
   const scrollRef = useRef(null)
 
   const skin       = SKINS[skinIdx] || SKINS[0]
-  const initials   = user?.initials || user?.name?.slice(0,2).toUpperCase() || 'YO'
+  const initials   = user?.initials || user?.username?.slice(0,2).toUpperCase() || 'YO'
   const sc         = STATUS_CONFIG[status]
   const coverStyle = COVERS.find(c => c.id === coverId)?.v || COVERS[0].v
 
-  // Hide cursor while scrolling
-  useEffect(() => {
-    const canvas = document.getElementById('particle-canvas')
-    const el = scrollRef.current
-    if (!canvas || !el) return
-    const hide = () => {
-      canvas.style.opacity = '0'
-      clearTimeout(el._t)
-      el._t = setTimeout(() => { canvas.style.opacity = '1' }, 280)
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    // Preview immediately
+    setAvatarUrl(URL.createObjectURL(file))
+    // Upload to server
+    const result = await updateAvatar(file)
+    if (result.ok && result.avatarUrl) {
+      const full = result.avatarUrl.startsWith('http') ? result.avatarUrl : API_BASE + result.avatarUrl
+      setAvatarUrl(full)
     }
-    el.addEventListener('scroll', hide, { passive: true })
-    return () => el.removeEventListener('scroll', hide)
-  }, [])
+  }
 
   const handleSave = async (e) => {
     e.preventDefault()
+    setError('')
     setSaving(true)
-    // Save all profile data to context (persisted in localStorage)
-    saveProfile({ name, email, bio, status, coverId, skinIdx, avatarUrl })
-    await new Promise(r => setTimeout(r, 500))
-    setSaving(false)
-    setSaved(true)
-    setEditing(false)
-    setTimeout(() => setSaved(false), 2000)
+    try {
+      // Update username on server
+      if (username.trim() && username.trim() !== user?.username) {
+        const result = await updateProfile({ username: username.trim() })
+        if (!result.ok) { setError(result.error); setSaving(false); return }
+      }
+      // Save local profile preferences
+      saveProfile({ name: username, bio, status, coverId, skinIdx })
+      await new Promise(r => setTimeout(r, 300))
+      setSaved(true)
+      setEditing(false)
+      setTimeout(() => setSaved(false), 2000)
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -123,23 +136,17 @@ export default function UserProfile({ onClose }) {
                   <circle cx="12" cy="13" r="4"/>
                 </svg>
               </button>
-              <input ref={avatarRef} type="file" accept="image/*" className="hidden"
-                onChange={e => { const f = e.target.files?.[0]; if(f) setAvatarUrl(URL.createObjectURL(f)) }}/>
+              <input ref={avatarRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange}/>
 
-              {/* Skin toggle button */}
               {!avatarUrl && (
                 <button onClick={() => setShowSkins(v => !v)}
                   className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-2 border-white shadow-md hover:scale-110 transition-transform"
-                  style={{ background: skin.bg }}>
-                  <span className="sr-only">Skin</span>
-                </button>
+                  style={{ background: skin.bg }}/>
               )}
 
-              {/* Status dot */}
               <span className={`absolute bottom-0.5 right-5 w-4 h-4 rounded-full border-[3px] border-white z-30 ${sc.color}`}/>
             </div>
 
-            {/* Skin picker popup */}
             {showSkins && (
               <div className="absolute z-40 mt-2 p-3 bg-white dark:bg-[#2c2c2e] rounded-2xl shadow-2xl border border-gray-200 dark:border-white/15"
                 style={{ top: '100%', left: 0, animation: 'fadeUp .15s ease' }}>
@@ -159,8 +166,6 @@ export default function UserProfile({ onClose }) {
 
         {/* Body */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 pb-5" style={{ scrollbarWidth: 'none' }}>
-
-          {/* Edit button row */}
           <div className="flex items-center justify-end" style={{ paddingTop: 50 }}>
             <button onClick={() => setEditing(v => !v)}
               className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border transition-all
@@ -173,29 +178,17 @@ export default function UserProfile({ onClose }) {
             </button>
           </div>
 
-          {/* Name / status */}
           <div className="mt-1 mb-4">
             <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-base font-bold text-gray-900 dark:text-gray-100 tracking-tight">{name || user?.name}</h2>
+              <h2 className="text-base font-bold text-gray-900 dark:text-gray-100 tracking-tight">{user?.username}</h2>
               <span className={`flex items-center gap-1 text-[10px] font-semibold ${sc.dot}`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${sc.color}`}/>{sc.label}
               </span>
             </div>
-            <p className="text-xs text-gray-400 dark:text-gray-500">{email || user?.email}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500">{user?.email}</p>
             {bio && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">{bio}</p>}
           </div>
 
-          {/* Stats */}
-          <div className="flex rounded-2xl overflow-hidden border border-gray-100 dark:border-white/8 mb-4">
-            {[{l:'Channel',v:'5'},{l:'Мессеж',v:'142'},{l:'Story',v:'3'}].map((s,i) => (
-              <div key={s.l} className={`flex-1 py-2.5 text-center ${i>0?'border-l border-gray-100 dark:border-white/8':''}`}>
-                <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{s.v}</p>
-                <p className="text-[10px] text-gray-400 dark:text-gray-500">{s.l}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Edit form */}
           {editing && (
             <form onSubmit={handleSave} className="mb-4 p-4 bg-gray-50 dark:bg-[#2c2c2e] rounded-2xl border border-gray-100 dark:border-white/8 space-y-3">
               <div>
@@ -211,12 +204,8 @@ export default function UserProfile({ onClose }) {
               </div>
               <div className="border-t border-gray-200 dark:border-white/8 pt-3 space-y-2.5">
                 <div>
-                  <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Нэр</p>
-                  <input className="input-base py-2 text-sm" type="text" value={name} onChange={e => setName(e.target.value)}/>
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Имэйл</p>
-                  <input className="input-base py-2 text-sm" type="email" value={email} onChange={e => setEmail(e.target.value)}/>
+                  <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Нэр (username)</p>
+                  <input className="input-base py-2 text-sm" type="text" value={username} onChange={e => setUsername(e.target.value)}/>
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Bio</p>
@@ -238,13 +227,10 @@ export default function UserProfile({ onClose }) {
                   </div>
                 </div>
               </div>
+              {error && <p className="text-xs text-red-500">{error}</p>}
               <button type="submit" disabled={saving}
                 className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-semibold hover:opacity-80 transition-opacity disabled:opacity-50">
-                {saving
-                  ? <><svg className="w-3.5 h-3.5 animate-spin-slow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" strokeOpacity=".3"/><path d="M12 2a10 10 0 0110 10"/></svg>Хадгалж байна…</>
-                  : saved
-                    ? <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>Хадгаллаа!</>
-                    : 'Хадгалах'}
+                {saving ? 'Хадгалж байна…' : saved ? '✓ Хадгаллаа!' : 'Хадгалах'}
               </button>
             </form>
           )}

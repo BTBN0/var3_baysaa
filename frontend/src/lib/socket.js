@@ -13,7 +13,12 @@ export const getSocket = () => {
 }
 
 export const connectSocket = (token) => {
+  if (!token) return
   const s = getSocket()
+  // Token өөрчлөгдсөн бол disconnect хийж дахин холбоно
+  if (s.connected && s.auth?.token !== token) {
+    s.disconnect()
+  }
   s.auth = { token }
   if (!s.connected) s.connect()
   return s
@@ -23,33 +28,32 @@ export const disconnectSocket = () => {
   if (socket?.connected) socket.disconnect()
 }
 
-// ── Client → Server events (exact backend socket event names) ──
 export const EV = {
   // Client emits
-  JOIN_WORKSPACE:  'join_workspace',   // workspaceId (string)
-  JOIN_CHANNEL:    'join_channel',     // channelId (string)
-  SEND_MESSAGE:    'send_message',     // { channelId, ...message }
-  DELETE_MESSAGE:  'delete_message',   // { messageId, channelId }
-  MESSAGE_EDITED:  'message_edited',   // { message, channelId }
-  MESSAGE_PINNED:  'message_pinned',   // { message, channelId }
-  REACTION_UPDATED:'reaction_updated', // { messageId, channelId, reactions }
-  TYPING_START:    'typing_start',     // { channelId }
-  TYPING_STOP:     'typing_stop',      // { channelId }
-  DM_SEND:         'dm_send',          // { toUserId, message }
-  FRIEND_REQUEST_SENT:    'friend_request_sent',     // { toUserId, request }
-  FRIEND_REQUEST_ACCEPTED:'friend_request_accepted', // { toUserId }
+  JOIN_WORKSPACE:   'join_workspace',
+  JOIN_CHANNEL:     'join_channel',
+  SEND_MESSAGE:     'send_message',
+  DELETE_MESSAGE:   'delete_message',
+  MESSAGE_EDITED:   'message_edited',
+  MESSAGE_PINNED:   'message_pinned',
+  REACTION_UPDATED: 'reaction_updated',
+  TYPING_START:     'typing_start',
+  TYPING_STOP:      'typing_stop',
+  DM_SEND:          'dm_send',
+  FRIEND_REQUEST_SENT:     'friend_request_sent',
+  FRIEND_REQUEST_ACCEPTED: 'friend_request_accepted',
 
   // Server emits
-  NEW_MESSAGE:      'new_message',        // message object
-  MESSAGE_DELETED:  'message_deleted',    // { messageId }
-  MSG_EDITED:       'message_edited',     // { message, channelId }
-  MSG_PINNED:       'message_pinned',     // { message, channelId }
-  REACTION_UPDATED_S:'reaction_updated',  // { messageId, reactions }
-  USER_TYPING:      'user_typing',        // { userId, username, typing }
-  USER_ONLINE:      'user_online',        // { userId }
-  USER_OFFLINE:     'user_offline',       // { userId }
-  DM_NEW:           'dm_new_message',     // message object
-  FRIEND_REQUEST_RECEIVED: 'friend_request_received', // request
-  FRIEND_ACCEPTED:  'friend_accepted',    // { userId, username }
-  SESSION_EXPIRED:  'session_expired',    // { message }
+  NEW_MESSAGE:       'new_message',
+  MESSAGE_DELETED:   'message_deleted',
+  MSG_EDITED:        'message_edited',
+  MSG_PINNED:        'message_pinned',
+  REACTION_UPDATED_S:'reaction_updated',
+  USER_TYPING:       'user_typing',
+  USER_ONLINE:       'user_online',
+  USER_OFFLINE:      'user_offline',
+  DM_NEW:            'dm_new_message',
+  FRIEND_REQUEST_RECEIVED: 'friend_request_received',
+  FRIEND_ACCEPTED:   'friend_accepted',
+  SESSION_EXPIRED:   'session_expired',
 }
