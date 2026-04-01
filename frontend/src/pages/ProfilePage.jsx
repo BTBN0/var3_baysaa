@@ -295,7 +295,6 @@ export default function ProfilePage({ onClose }) {
                 {stObj.label}
               </span>
             </div>
-            <p style={{fontSize:12,color:P.muted,margin:0}}>{user?.email}</p>
             {bio&&<p style={{fontSize:12,color:P.text2,marginTop:6,lineHeight:1.6}}>{bio}</p>}
           </div>
 
@@ -309,12 +308,10 @@ export default function ProfilePage({ onClose }) {
               <p style={{...labelStyle,marginBottom:10}}>Дансны мэдээлэл</p>
               {[
                 {label:"Бүртгүүлсэн", val: user?.createdAt?new Date(user.createdAt).toLocaleDateString("mn-MN"):"—"},
-                {label:"User ID",     val: user?.id, mono:true},
-              ].map(({label,val,mono})=>(
+              ].map(({label,val})=>(
                 <div key={label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
                   <span style={{fontSize:12,color:P.muted}}>{label}</span>
-                  <span style={{fontSize:mono?10:12,color:P.text2,fontFamily:mono?"monospace":"inherit",
-                    maxWidth:180,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{val}</span>
+                  <span style={{fontSize:12,color:P.text2}}>{val}</span>
                 </div>
               ))}
             </div>
@@ -332,10 +329,6 @@ export default function ProfilePage({ onClose }) {
                 <span style={labelStyle}>Хэрэглэгчийн нэр</span>
                 <input style={inputStyle} type="text" value={username}
                   onChange={e=>setUsername(e.target.value)} onFocus={onFocus} onBlur={onBlur}/>
-              </div>
-              <div>
-                <span style={labelStyle}>Имэйл</span>
-                <input style={{...inputStyle,color:P.muted,cursor:"not-allowed",opacity:0.6}} type="text" value={user?.email||""} disabled/>
               </div>
               <div>
                 <span style={labelStyle}>Био</span>

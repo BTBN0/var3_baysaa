@@ -140,6 +140,7 @@ export const MessageScalarFieldEnum = {
   fileType: 'fileType',
   deleted: 'deleted',
   pinned: 'pinned',
+  replyTo: 'replyTo',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   userId: 'userId',
@@ -238,6 +239,14 @@ export const SortOrder = {
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
 export const NullsOrder = {
   first: 'first',
   last: 'last'
@@ -288,6 +297,23 @@ export const ChannelOrderByRelevanceFieldEnum = {
 } as const
 
 export type ChannelOrderByRelevanceFieldEnum = (typeof ChannelOrderByRelevanceFieldEnum)[keyof typeof ChannelOrderByRelevanceFieldEnum]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
+
+
+export const QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
+} as const
+
+export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
 
 
 export const MessageOrderByRelevanceFieldEnum = {

@@ -35,22 +35,27 @@ const UserAvatar = ({ user, size = 32 }) => {
 };
 
 const WorkspaceCard = ({ workspace, onEnter }) => {
-  const [copied, setCopied] = useState(false);
   const [hovered, setHovered] = useState(false);
+  const [showInvite, setShowInvite] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  const copyInvite = async (e) => {
+  const handleInviteClick = async (e) => {
     e.stopPropagation();
-    await navigator.clipboard.writeText(workspace.inviteCode);
+    if (!showInvite) { setShowInvite(true); return; }
+    try { await navigator.clipboard.writeText(workspace.inviteCode); } catch {}
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => { setCopied(false); setShowInvite(false); }, 2000);
   };
 
   return (
     <div
-      onClick={() => onEnter(workspace)}
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{ background: hovered ? "var(--surface2)" : "var(--surface)", border: "1px solid", borderColor: hovered ? "var(--border2)" : "var(--border)", borderRadius: 14, padding: "16px 18px", cursor: "pointer", display: "flex", alignItems: "center", gap: 14,
+      onMouseLeave={() => { setHovered(false); if (!copied) setShowInvite(false); }}
+      onClick={() => { if (!showInvite) onEnter(workspace); }}
+      style={{ background: hovered ? "var(--surface2)" : "var(--surface)", border: "1px solid",
+        borderColor: hovered ? "var(--border2)" : "var(--border)", borderRadius: 14,
+        padding: "14px 16px 14px 18px", cursor: "pointer",
+        display: "flex", alignItems: "center", gap: 14,
         transition: "all 0.2s ease",
         transform: hovered ? "translateY(-2px)" : "translateY(0)",
         boxShadow: hovered ? "0 8px 24px rgba(8,11,42,0.4), 0 0 0 1px var(--border2)" : "none",
@@ -58,24 +63,40 @@ const WorkspaceCard = ({ workspace, onEnter }) => {
     >
       <WorkspaceAvatar workspace={workspace} size={44} />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <h3 style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", marginBottom: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{workspace.name}</h3>
-        {workspace.description && (
-          <p style={{ fontSize: 12, color: "var(--text4)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 4 }}>{workspace.description}</p>
+        <h3 style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: showInvite ? 8 : 2 }}>
+          {workspace.name}
+        </h3>
+        {workspace.description && !showInvite && (
+          <p style={{ fontSize: 12, color: "var(--text4)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{workspace.description}</p>
         )}
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <code style={{ fontSize: 10, color: "var(--text5)", fontFamily: "monospace", background: "var(--surface3)", padding: "2px 6px", borderRadius: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 180 }}>
-            {workspace.inviteCode}
-          </code>
-          <button
-            onClick={copyInvite}
-            style={{ display: "flex", alignItems: "center", gap: 4, padding: "2px 7px", background: "none", border: "1px solid var(--border2)", borderRadius: 5, cursor: "pointer", color: copied ? "var(--green)" : "var(--text4)", fontSize: 11, fontWeight: 500, transition: "all 0.15s" }}
-          >
-            {copied ? <Check size={10} /> : <Copy size={10} />}
-            {copied ? "Copied" : "Copy"}
-          </button>
-        </div>
+        {showInvite && (
+          <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", gap: 8, animation: "slideDown .18s ease both" }}>
+            <div style={{ flex: 1, padding: "5px 10px", borderRadius: 8, background: "var(--surface3)", border: "1px solid var(--border2)", fontSize: 10, color: "var(--text5)", fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {workspace.inviteCode}
+            </div>
+            <button onClick={handleInviteClick} style={{
+              padding: "5px 14px", borderRadius: 8, border: "none", cursor: "pointer", flexShrink: 0,
+              background: copied ? "rgba(34,197,94,0.15)" : "linear-gradient(135deg,#1B3066,#2a4080)",
+              border: copied ? "1px solid rgba(34,197,94,0.3)" : "none",
+              color: copied ? "#4ade80" : "#F0F0F5", fontSize: 11, fontWeight: 600, transition: "all .15s",
+            }}>{copied ? "✓ Copied!" : "Copy link"}</button>
+          </div>
+        )}
       </div>
-      <ChevronRight size={16} color="var(--text5)" style={{ flexShrink: 0, opacity: hovered ? 1 : 0, transition: "opacity 0.15s" }} />
+      {/* + Invite button */}
+      <button onClick={handleInviteClick} title="Invite" style={{
+        width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
+        background: showInvite ? "rgba(27,48,102,0.35)" : "var(--surface2)",
+        border: `1px solid ${showInvite ? "#6B7399" : "var(--border)"}`,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        cursor: "pointer", color: showInvite ? "var(--text)" : "var(--text4)",
+        transition: "all .15s", opacity: hovered || showInvite ? 1 : 0,
+      }}
+        onMouseEnter={e => { e.currentTarget.style.background = "rgba(27,48,102,0.4)"; e.currentTarget.style.color = "var(--text)"; e.currentTarget.style.borderColor = "#6B7399"; }}
+        onMouseLeave={e => { e.currentTarget.style.background = showInvite ? "rgba(27,48,102,0.35)" : "var(--surface2)"; e.currentTarget.style.color = showInvite ? "var(--text)" : "var(--text4)"; e.currentTarget.style.borderColor = showInvite ? "#6B7399" : "var(--border)"; }}
+      >
+        <Plus size={14} />
+      </button>
     </div>
   );
 };
@@ -107,7 +128,17 @@ const DashboardPage = () => {
 
   useEffect(() => {
     api.get("/workspaces").then((res) => {
-      setWorkspaces(res.data.data || []);
+      const ws = res.data.data || [];
+      setWorkspaces(ws);
+      // Auto navigate to last workspace if exists
+      if (ws.length > 0) {
+        const lastId = localStorage.getItem("lastWorkspaceId");
+        const target = ws.find(w => w.id === lastId) || ws[0];
+        api.get(`/channels/workspace/${target.id}`).then(r => {
+          const chs = r.data.data || [];
+          if (chs.length > 0) navigate(`/chat/${target.id}/${chs[0].id}`, { replace: true });
+        }).catch(() => {});
+      }
     }).finally(() => setLoading(false));
   }, []);
 
@@ -223,7 +254,6 @@ const DashboardPage = () => {
               <div key={ws.id} style={{ animation: `fadeUp .3s cubic-bezier(0.22,1,0.36,1) ${i * 0.06}s both` }}>
                 <WorkspaceCard workspace={ws} onEnter={handleEnter} />
               </div>
-            ))}
             ))}
           </div>
         )}

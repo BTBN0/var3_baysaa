@@ -146,3 +146,32 @@ export const updateWorkspaceAvatar = async (req, res, next) => {
     next(err);
   }
 };
+// GET /api/workspaces/invite/:code — preview without joining
+export const getInvitePreview = async (req, res, next) => {
+  try {
+    const { code } = req.params;
+    const workspace = await prisma.workspace.findUnique({
+      where: { inviteCode: code },
+      select: {
+        id: true, name: true, description: true, avatar: true,
+        _count: { select: { members: true } },
+      },
+    });
+    if (!workspace) return res.status(404).json({ ok: false, message: "Урилга хүчингүй байна" });
+
+    // Check if requester is already a member (if authenticated)
+    const authHeader = req.headers.authorization;
+    if (authHeader?.startsWith("Bearer ")) {
+      try {
+        const { verifyToken } = await import("../config/jwt.js");
+        const decoded = verifyToken(authHeader.split(" ")[1]);
+        const member = await prisma.workspaceMember.findUnique({
+          where: { userId_workspaceId: { userId: decoded.id, workspaceId: workspace.id } },
+        });
+        if (member) return res.status(409).json({ ok: false, message: "Та аль хэдийн гишүүн байна", data: workspace });
+      } catch {}
+    }
+
+    res.json({ ok: true, data: { ...workspace, memberCount: workspace._count.members } });
+  } catch (err) { next(err); }
+};

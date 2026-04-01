@@ -181,22 +181,26 @@ const MessageItem = ({ msg, isOwn, showAvatar, showDate, onReaction, onEdit, onD
           ) : (
             <>
               {/* Reply-to preview */}
-              {msg.replyTo && (
-                <div style={{
-                  display: "flex", alignItems: "flex-start", gap: 6,
-                  padding: "5px 8px", marginBottom: 4, borderRadius: 6,
-                  background: "rgba(107,115,153,0.1)",
-                  borderLeft: "2px solid #6B7399",
-                }}>
-                  <CornerUpLeft size={10} style={{ color: "var(--text5)", flexShrink: 0, marginTop: 2 }} />
-                  <div style={{ minWidth: 0 }}>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: "#6B7399" }}>{msg.replyTo.username} </span>
-                    <span style={{ fontSize: 11, color: "var(--text5)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "inline-block", maxWidth: 200 }}>
-                      {msg.replyTo.content}
-                    </span>
+              {msg.replyTo && (() => {
+                const rt = typeof msg.replyTo === "string" ? (() => { try { return JSON.parse(msg.replyTo); } catch { return null; } })() : msg.replyTo;
+                if (!rt) return null;
+                return (
+                  <div style={{
+                    display: "flex", alignItems: "flex-start", gap: 6,
+                    padding: "5px 8px", marginBottom: 4, borderRadius: 6,
+                    background: "rgba(107,115,153,0.1)",
+                    borderLeft: "2px solid #6B7399",
+                  }}>
+                    <CornerUpLeft size={10} style={{ color: "var(--text5)", flexShrink: 0, marginTop: 2 }} />
+                    <div style={{ minWidth: 0 }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: "#6B7399" }}>{rt.username} </span>
+                      <span style={{ fontSize: 11, color: "var(--text5)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "inline-block", maxWidth: 200 }}>
+                        {rt.content}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
               {msg.content && <p style={{ fontSize: 13, color: "var(--text3)", lineHeight: 1.6, wordBreak: "break-word" }}>{msg.content}</p>}
               <FileAttachment fileUrl={msg.fileUrl} fileType={msg.fileType} />
               <ReactionBar reactions={msg.reactions || []} onReaction={onReaction} messageId={msg.id} currentUserId={currentUserId} />

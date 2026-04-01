@@ -57,6 +57,7 @@ export type MessageCountAggregateOutputType = {
   fileType: number
   deleted: number
   pinned: number
+  replyTo: number
   createdAt: number
   updatedAt: number
   userId: number
@@ -98,6 +99,7 @@ export type MessageCountAggregateInputType = {
   fileType?: true
   deleted?: true
   pinned?: true
+  replyTo?: true
   createdAt?: true
   updatedAt?: true
   userId?: true
@@ -184,6 +186,7 @@ export type MessageGroupByOutputType = {
   fileType: string | null
   deleted: boolean
   pinned: boolean
+  replyTo: runtime.JsonValue | null
   createdAt: Date
   updatedAt: Date
   userId: string
@@ -218,6 +221,7 @@ export type MessageWhereInput = {
   fileType?: Prisma.StringNullableFilter<"Message"> | string | null
   deleted?: Prisma.BoolFilter<"Message"> | boolean
   pinned?: Prisma.BoolFilter<"Message"> | boolean
+  replyTo?: Prisma.JsonNullableFilter<"Message">
   createdAt?: Prisma.DateTimeFilter<"Message"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Message"> | Date | string
   userId?: Prisma.StringFilter<"Message"> | string
@@ -235,6 +239,7 @@ export type MessageOrderByWithRelationInput = {
   fileType?: Prisma.SortOrderInput | Prisma.SortOrder
   deleted?: Prisma.SortOrder
   pinned?: Prisma.SortOrder
+  replyTo?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   userId?: Prisma.SortOrder
@@ -256,6 +261,7 @@ export type MessageWhereUniqueInput = Prisma.AtLeast<{
   fileType?: Prisma.StringNullableFilter<"Message"> | string | null
   deleted?: Prisma.BoolFilter<"Message"> | boolean
   pinned?: Prisma.BoolFilter<"Message"> | boolean
+  replyTo?: Prisma.JsonNullableFilter<"Message">
   createdAt?: Prisma.DateTimeFilter<"Message"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Message"> | Date | string
   userId?: Prisma.StringFilter<"Message"> | string
@@ -273,6 +279,7 @@ export type MessageOrderByWithAggregationInput = {
   fileType?: Prisma.SortOrderInput | Prisma.SortOrder
   deleted?: Prisma.SortOrder
   pinned?: Prisma.SortOrder
+  replyTo?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   userId?: Prisma.SortOrder
@@ -292,6 +299,7 @@ export type MessageScalarWhereWithAggregatesInput = {
   fileType?: Prisma.StringNullableWithAggregatesFilter<"Message"> | string | null
   deleted?: Prisma.BoolWithAggregatesFilter<"Message"> | boolean
   pinned?: Prisma.BoolWithAggregatesFilter<"Message"> | boolean
+  replyTo?: Prisma.JsonNullableWithAggregatesFilter<"Message">
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Message"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Message"> | Date | string
   userId?: Prisma.StringWithAggregatesFilter<"Message"> | string
@@ -305,6 +313,7 @@ export type MessageCreateInput = {
   fileType?: string | null
   deleted?: boolean
   pinned?: boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutMessagesInput
@@ -320,6 +329,7 @@ export type MessageUncheckedCreateInput = {
   fileType?: string | null
   deleted?: boolean
   pinned?: boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   userId: string
@@ -335,6 +345,7 @@ export type MessageUpdateInput = {
   fileType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   pinned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutMessagesNestedInput
@@ -350,6 +361,7 @@ export type MessageUncheckedUpdateInput = {
   fileType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   pinned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -365,6 +377,7 @@ export type MessageCreateManyInput = {
   fileType?: string | null
   deleted?: boolean
   pinned?: boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   userId: string
@@ -378,6 +391,7 @@ export type MessageUpdateManyMutationInput = {
   fileType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   pinned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -389,6 +403,7 @@ export type MessageUncheckedUpdateManyInput = {
   fileType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   pinned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -418,6 +433,7 @@ export type MessageCountOrderByAggregateInput = {
   fileType?: Prisma.SortOrder
   deleted?: Prisma.SortOrder
   pinned?: Prisma.SortOrder
+  replyTo?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   userId?: Prisma.SortOrder
@@ -578,6 +594,7 @@ export type MessageCreateWithoutUserInput = {
   fileType?: string | null
   deleted?: boolean
   pinned?: boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   channel: Prisma.ChannelCreateNestedOneWithoutMessagesInput
@@ -592,6 +609,7 @@ export type MessageUncheckedCreateWithoutUserInput = {
   fileType?: string | null
   deleted?: boolean
   pinned?: boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   channelId: string
@@ -635,6 +653,7 @@ export type MessageScalarWhereInput = {
   fileType?: Prisma.StringNullableFilter<"Message"> | string | null
   deleted?: Prisma.BoolFilter<"Message"> | boolean
   pinned?: Prisma.BoolFilter<"Message"> | boolean
+  replyTo?: Prisma.JsonNullableFilter<"Message">
   createdAt?: Prisma.DateTimeFilter<"Message"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Message"> | Date | string
   userId?: Prisma.StringFilter<"Message"> | string
@@ -648,6 +667,7 @@ export type MessageCreateWithoutChannelInput = {
   fileType?: string | null
   deleted?: boolean
   pinned?: boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutMessagesInput
@@ -662,6 +682,7 @@ export type MessageUncheckedCreateWithoutChannelInput = {
   fileType?: string | null
   deleted?: boolean
   pinned?: boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   userId: string
@@ -702,6 +723,7 @@ export type MessageCreateWithoutReactionsInput = {
   fileType?: string | null
   deleted?: boolean
   pinned?: boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutMessagesInput
@@ -716,6 +738,7 @@ export type MessageUncheckedCreateWithoutReactionsInput = {
   fileType?: string | null
   deleted?: boolean
   pinned?: boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   userId: string
@@ -746,6 +769,7 @@ export type MessageUpdateWithoutReactionsInput = {
   fileType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   pinned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutMessagesNestedInput
@@ -760,6 +784,7 @@ export type MessageUncheckedUpdateWithoutReactionsInput = {
   fileType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   pinned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -774,6 +799,7 @@ export type MessageCreateWithoutThreadInput = {
   fileType?: string | null
   deleted?: boolean
   pinned?: boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutMessagesInput
@@ -788,6 +814,7 @@ export type MessageUncheckedCreateWithoutThreadInput = {
   fileType?: string | null
   deleted?: boolean
   pinned?: boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   userId: string
@@ -818,6 +845,7 @@ export type MessageUpdateWithoutThreadInput = {
   fileType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   pinned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutMessagesNestedInput
@@ -832,6 +860,7 @@ export type MessageUncheckedUpdateWithoutThreadInput = {
   fileType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   pinned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -846,6 +875,7 @@ export type MessageCreateManyUserInput = {
   fileType?: string | null
   deleted?: boolean
   pinned?: boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   channelId: string
@@ -858,6 +888,7 @@ export type MessageUpdateWithoutUserInput = {
   fileType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   pinned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   channel?: Prisma.ChannelUpdateOneRequiredWithoutMessagesNestedInput
@@ -872,6 +903,7 @@ export type MessageUncheckedUpdateWithoutUserInput = {
   fileType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   pinned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   channelId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -886,6 +918,7 @@ export type MessageUncheckedUpdateManyWithoutUserInput = {
   fileType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   pinned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   channelId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -898,6 +931,7 @@ export type MessageCreateManyChannelInput = {
   fileType?: string | null
   deleted?: boolean
   pinned?: boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   userId: string
@@ -910,6 +944,7 @@ export type MessageUpdateWithoutChannelInput = {
   fileType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   pinned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutMessagesNestedInput
@@ -924,6 +959,7 @@ export type MessageUncheckedUpdateWithoutChannelInput = {
   fileType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   pinned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -938,6 +974,7 @@ export type MessageUncheckedUpdateManyWithoutChannelInput = {
   fileType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   pinned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -981,6 +1018,7 @@ export type MessageSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   fileType?: boolean
   deleted?: boolean
   pinned?: boolean
+  replyTo?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   userId?: boolean
@@ -1001,13 +1039,14 @@ export type MessageSelectScalar = {
   fileType?: boolean
   deleted?: boolean
   pinned?: boolean
+  replyTo?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   userId?: boolean
   channelId?: boolean
 }
 
-export type MessageOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "content" | "fileUrl" | "fileType" | "deleted" | "pinned" | "createdAt" | "updatedAt" | "userId" | "channelId", ExtArgs["result"]["message"]>
+export type MessageOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "content" | "fileUrl" | "fileType" | "deleted" | "pinned" | "replyTo" | "createdAt" | "updatedAt" | "userId" | "channelId", ExtArgs["result"]["message"]>
 export type MessageInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   channel?: boolean | Prisma.ChannelDefaultArgs<ExtArgs>
@@ -1031,6 +1070,7 @@ export type $MessagePayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     fileType: string | null
     deleted: boolean
     pinned: boolean
+    replyTo: runtime.JsonValue | null
     createdAt: Date
     updatedAt: Date
     userId: string
@@ -1414,6 +1454,7 @@ export interface MessageFieldRefs {
   readonly fileType: Prisma.FieldRef<"Message", 'String'>
   readonly deleted: Prisma.FieldRef<"Message", 'Boolean'>
   readonly pinned: Prisma.FieldRef<"Message", 'Boolean'>
+  readonly replyTo: Prisma.FieldRef<"Message", 'Json'>
   readonly createdAt: Prisma.FieldRef<"Message", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Message", 'DateTime'>
   readonly userId: Prisma.FieldRef<"Message", 'String'>

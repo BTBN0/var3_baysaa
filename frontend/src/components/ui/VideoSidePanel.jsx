@@ -1,255 +1,454 @@
-import { useEffect, useRef, useState } from "react";
-import { Mic, MicOff, Video, VideoOff, Monitor, MonitorOff, PhoneOff, Phone, Maximize2, Minimize2, X } from "lucide-react";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { Mic, MicOff, Video, VideoOff, Monitor, MonitorOff, PhoneOff, Phone, Maximize2, Minimize2, X, GripVertical } from "lucide-react";
+import { useTheme } from "../../context/ThemeContext.jsx";
 
-// Standalone video element that properly reacts to stream changes
-const VideoEl = ({ stream, muted, mirror = false, contain = false }) => {
+// ── Video element ──────────────────────────────────────────────────────────
+const VideoEl = ({ stream, muted, mirror, contain }) => {
   const ref = useRef(null);
-
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    if (stream) {
-      el.srcObject = stream;
-      el.play().catch(() => {});
-    } else {
-      el.srcObject = null;
-    }
+    if (!ref.current) return;
+    ref.current.srcObject = stream || null;
+    if (stream) ref.current.play().catch(() => {});
   }, [stream]);
-
   return (
-    <video
-      ref={ref}
-      autoPlay
-      playsInline
-      muted={muted}
-      style={{
-        width: "100%",
-        height: "100%",
-        objectFit: contain ? "contain" : "cover",
-        transform: mirror ? "scaleX(-1)" : "none",
-        display: "block",
-        background: "#000",
-      }}
-    />
+    <video ref={ref} autoPlay playsInline muted={muted} style={{
+      width: "100%", height: "100%",
+      objectFit: contain ? "contain" : "cover",
+      transform: mirror ? "scaleX(-1)" : "none",
+      background: "#040612",
+    }} />
   );
 };
 
-const ParticipantTile = ({ stream, label, muted = false, isLocal = false, isCameraOff = false, isScreenShare = false }) => {
-  const gradients = [
-    "linear-gradient(135deg,#3b82f6,#6366f1)",
-    "linear-gradient(135deg,#8b5cf6,#ec4899)",
-    "linear-gradient(135deg,#06b6d4,#3b82f6)",
-    "linear-gradient(135deg,#10b981,#06b6d4)",
-    "linear-gradient(135deg,#f59e0b,#ef4444)",
-    "linear-gradient(135deg,#ec4899,#f43f5e)",
-  ];
-  const gradient = gradients[(label?.charCodeAt(0) || 0) % gradients.length];
-
+// ── Participant tile ───────────────────────────────────────────────────────
+const Tile = ({ stream, label, muted, isLocal, isCameraOff, large }) => {
   const hasVideo = stream &&
     stream.getVideoTracks().length > 0 &&
     stream.getVideoTracks()[0].readyState === "live" &&
     !(isLocal && isCameraOff);
 
+  const initials = label?.slice(0, 2).toUpperCase() || "?";
+  const hue = ((label?.charCodeAt(0) || 0) * 37) % 360;
+
   return (
-    <div style={{ position: "relative", background: "#111", borderRadius: 10, overflow: "hidden", aspectRatio: "16/9", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(255,255,255,0.06)", width: "100%" }}>
-      {hasVideo ? (
-        <VideoEl stream={stream} muted={muted} mirror={isLocal && !isScreenShare} contain={isScreenShare} />
-      ) : (
-        <>
-          {stream && <VideoEl stream={stream} muted={muted} mirror={false} />}
-          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, background: "#111" }}>
-            <div style={{ width: 44, height: 44, borderRadius: "50%", background: label ? gradient : "#333", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 700, color: "#fff" }}>
-              {label ? label[0].toUpperCase() : "?"}
-            </div>
-            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>
-              {isCameraOff ? "Camera off" : stream ? "Audio only" : "Connecting..."}
-            </span>
+    <div style={{
+      position: "relative",
+      background: `hsl(${hue},30%,12%)`,
+      borderRadius: large ? 14 : 10,
+      overflow: "hidden",
+      width: "100%",
+      aspectRatio: large ? "16/9" : "16/9",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      border: "1px solid rgba(255,255,255,0.06)",
+      boxShadow: large ? "inset 0 0 40px rgba(0,0,0,0.4)" : "none",
+    }}>
+      {hasVideo
+        ? <VideoEl stream={stream} muted={muted} mirror={isLocal} />
+        : (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+            <div style={{
+              width: large ? 64 : 36, height: large ? 64 : 36, borderRadius: "50%",
+              background: `linear-gradient(135deg, hsl(${hue},60%,35%), hsl(${hue+30},60%,25%))`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: large ? 22 : 13, fontWeight: 700, color: "#fff",
+              boxShadow: `0 0 20px hsl(${hue},60%,20%)`,
+            }}>{initials}</div>
+            {isCameraOff && <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>Camera off</span>}
           </div>
-        </>
-      )}
-      {label && (
-        <div style={{ position: "absolute", bottom: 7, left: 9, fontSize: 10, fontWeight: 500, color: "rgba(255,255,255,0.9)", background: "rgba(0,0,0,0.6)", padding: "2px 8px", borderRadius: 20, backdropFilter: "blur(4px)", zIndex: 2 }}>
-          {label}{isLocal ? " (you)" : ""}
-        </div>
-      )}
+        )
+      }
+      {/* Name tag */}
+      <div style={{
+        position: "absolute", bottom: 8, left: 8,
+        fontSize: 10, fontWeight: 600,
+        color: "rgba(255,255,255,0.9)",
+        background: "rgba(0,0,0,0.55)",
+        backdropFilter: "blur(6px)",
+        padding: "2px 8px", borderRadius: 20,
+      }}>
+        {label}{isLocal ? " (та)" : ""}
+        {muted && " 🔇"}
+      </div>
     </div>
   );
 };
 
-const ScreenTile = ({ screenStream, large = false }) => {
-  const ref = useRef(null);
-  useEffect(() => {
-    if (ref.current && screenStream) {
-      ref.current.srcObject = screenStream;
-      ref.current.play().catch(() => {});
-    }
-  }, [screenStream]);
-
-  return (
-    <div style={{ position: "relative", background: "#000", borderRadius: large ? 0 : 10, overflow: "hidden", flex: large ? 1 : "none", aspectRatio: large ? "auto" : "16/9", minHeight: large ? 0 : "auto", display: "flex", alignItems: "center", justifyContent: "center", border: large ? "none" : "1px solid rgba(255,255,255,0.08)", width: "100%" }}>
-      <video ref={ref} autoPlay playsInline muted style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
-      <div style={{ position: "absolute", top: 8, right: 8, fontSize: 10, fontWeight: 600, color: "#fff", background: "rgba(34,197,94,0.85)", padding: "3px 9px", borderRadius: 20 }}>Sharing screen</div>
-    </div>
-  );
-};
-
-const CtrlBtn = ({ onClick, active, danger, title, children, size = 36 }) => (
-  <button onClick={onClick} title={title}
-    style={{ width: size, height: size, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer", transition: "all 0.15s", background: danger ? "rgba(239,68,68,0.85)" : active ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.1)", color: "#fff", flexShrink: 0 }}
-    onMouseEnter={(e) => { e.currentTarget.style.background = danger ? "#ef4444" : "rgba(255,255,255,0.25)"; }}
-    onMouseLeave={(e) => { e.currentTarget.style.background = danger ? "rgba(239,68,68,0.85)" : active ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.1)"; }}>
+// ── Control button (always-dark for fullscreen) ────────────────────────────
+const FsBtn = ({ onClick, active, danger, size = 48, title, children }) => (
+  <button onClick={onClick} title={title} style={{
+    width: size, height: size, borderRadius: "50%", border: "none",
+    cursor: "pointer", transition: "all .2s cubic-bezier(0.34,1.56,0.64,1)",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    flexShrink: 0,
+    background: danger
+      ? "rgba(239,68,68,0.9)"
+      : active
+        ? "rgba(255,255,255,0.25)"
+        : "rgba(255,255,255,0.1)",
+    color: "#fff",
+    boxShadow: danger ? "0 4px 20px rgba(239,68,68,0.5)" : active ? "0 0 0 2px rgba(255,255,255,0.3)" : "none",
+  }}
+    onMouseEnter={e => {
+      e.currentTarget.style.transform = "scale(1.12)";
+      e.currentTarget.style.background = danger ? "#ef4444" : active ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.2)";
+    }}
+    onMouseLeave={e => {
+      e.currentTarget.style.transform = "scale(1)";
+      e.currentTarget.style.background = danger ? "rgba(239,68,68,0.9)" : active ? "rgba(255,255,255,0.25)" : "rgba(255,255,255,0.1)";
+    }}>
     {children}
   </button>
 );
 
-const VideoSidePanel = ({
-  inCall, localStream, screenStream, localUser, participants,
-  isMuted, isCameraOff, isScreenSharing,
-  onJoinAudio, onJoinVideo, onLeave, onToggleMute, onToggleCamera, onToggleScreen,
-}) => {
-  const [fullscreen, setFullscreen] = useState(false);
-  const [showControls, setShowControls] = useState(true);
-  const controlTimeout = useRef(null);
+// ── Panel button (theme-aware for sidebar) ─────────────────────────────────
+const PanelBtn = ({ onClick, active, danger, size = 36, title, children, isDark }) => {
+  const base = danger
+    ? "rgba(239,68,68,0.12)"
+    : active
+      ? isDark ? "rgba(255,255,255,0.18)" : "rgba(27,48,102,0.22)"
+      : isDark ? "rgba(255,255,255,0.06)" : "rgba(27,48,102,0.06)";
+  const col = danger
+    ? "#f87171"
+    : active
+      ? isDark ? "#fff" : "#1B3066"
+      : isDark ? "rgba(255,255,255,0.55)" : "#6B7399";
 
-  useEffect(() => {
-    if (isScreenSharing) setFullscreen(true);
-    else setFullscreen(false);
-  }, [isScreenSharing]);
+  return (
+    <button onClick={onClick} title={title} style={{
+      width: size, height: size, borderRadius: "50%",
+      border: `1px solid ${danger ? "rgba(239,68,68,0.25)" : isDark ? "rgba(255,255,255,0.1)" : "rgba(27,48,102,0.12)"}`,
+      cursor: "pointer", transition: "all .2s cubic-bezier(0.34,1.56,0.64,1)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      flexShrink: 0, background: base, color: col,
+    }}
+      onMouseEnter={e => {
+        e.currentTarget.style.transform = "scale(1.1)";
+        e.currentTarget.style.background = danger ? "rgba(239,68,68,0.85)" : isDark ? "rgba(255,255,255,0.2)" : "rgba(27,48,102,0.18)";
+        if (danger) e.currentTarget.style.color = "#fff";
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.transform = "scale(1)";
+        e.currentTarget.style.background = base;
+        e.currentTarget.style.color = col;
+      }}>
+      {children}
+    </button>
+  );
+};
 
-  const resetTimer = () => {
-    setShowControls(true);
-    clearTimeout(controlTimeout.current);
-    controlTimeout.current = setTimeout(() => setShowControls(false), 3000);
+const MIN_W = 220, MAX_W = 540, DEFAULT_W = 260;
+
+// ── Grid layout for participants ───────────────────────────────────────────
+const Grid = ({ allInCall, isCameraOff, screenStream, isScreenSharing }) => {
+  const count = allInCall.length;
+  // 1 = full, 2 = side by side, 3+ = grid
+  const getStyle = () => {
+    if (count === 1) return { gridTemplateColumns: "1fr", gridTemplateRows: "1fr" };
+    if (count === 2) return { gridTemplateColumns: "1fr", gridTemplateRows: "1fr 1fr" };
+    if (count <= 4)  return { gridTemplateColumns: "1fr 1fr", gridTemplateRows: "1fr 1fr" };
+    return { gridTemplateColumns: "1fr 1fr 1fr", gridTemplateRows: "auto" };
   };
 
+  return (
+    <div style={{ flex: 1, minHeight: 0, display: "grid", gap: 4, padding: 4, ...getStyle() }}>
+      {isScreenSharing && screenStream && (
+        <div style={{ gridColumn: count > 1 ? "1/-1" : undefined, borderRadius: 10, overflow: "hidden", background: "#040612", border: "1px solid rgba(255,255,255,0.06)" }}>
+          <VideoEl stream={screenStream} muted contain />
+        </div>
+      )}
+      {allInCall.map(p => (
+        <Tile key={p.socketId} stream={p.stream} label={p.username} muted={p.isLocal}
+          isLocal={p.isLocal} isCameraOff={p.isLocal && isCameraOff} />
+      ))}
+    </div>
+  );
+};
+
+// ── Main component ─────────────────────────────────────────────────────────
+export default function VideoSidePanel({
+  inCall, isMuted, isCameraOff, isScreenSharing,
+  localStream, participants = [], localUser, screenStream,
+  onJoinAudio, onJoinVideo, onLeave,
+  onToggleMute, onToggleCamera, onToggleScreen,
+}) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
+  const [fullscreen,    setFullscreen]    = useState(false);
+  const [showControls,  setShowControls]  = useState(true);
+  const [panelW,        setPanelW]        = useState(DEFAULT_W);
+  const [dragging,      setDragging]      = useState(false);
+  const ctrlTimer  = useRef(null);
+  const dragStartX = useRef(0);
+  const dragStartW = useRef(0);
+
+  // Auto fullscreen on call start
+  useEffect(() => { if (inCall) setFullscreen(true); }, [inCall]);
+  useEffect(() => { if (!inCall) setFullscreen(false); }, [inCall]);
+  useEffect(() => { if (isScreenSharing) setFullscreen(true); }, [isScreenSharing]);
+
+  const resetTimer = useCallback(() => {
+    setShowControls(true);
+    clearTimeout(ctrlTimer.current);
+    ctrlTimer.current = setTimeout(() => setShowControls(false), 3500);
+  }, []);
+  useEffect(() => { if (fullscreen && inCall) resetTimer(); return () => clearTimeout(ctrlTimer.current); }, [fullscreen, inCall, resetTimer]);
+
+  const onDragStart = useCallback(e => {
+    e.preventDefault(); setDragging(true);
+    dragStartX.current = e.clientX; dragStartW.current = panelW;
+  }, [panelW]);
+
   useEffect(() => {
-    if (fullscreen) resetTimer();
-    return () => clearTimeout(controlTimeout.current);
-  }, [fullscreen]);
+    if (!dragging) return;
+    const onMove = e => setPanelW(Math.min(MAX_W, Math.max(MIN_W, dragStartW.current + dragStartX.current - e.clientX)));
+    const onUp = () => setDragging(false);
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
+  }, [dragging]);
 
   const allInCall = [
     ...(localStream ? [{ socketId: "local", username: localUser?.username || "You", stream: localStream, isLocal: true }] : []),
     ...participants,
   ];
 
-  return (
+  const P = {
+    bg:      isDark ? "var(--surface)"  : "#ffffff",
+    bg2:     isDark ? "var(--surface2)" : "#f4f4fb",
+    border:  isDark ? "var(--border)"   : "#c8c8dc",
+    text:    isDark ? "var(--text)"     : "#080B2A",
+    muted:   isDark ? "var(--text5)"    : "#6B7399",
+  };
+
+  // ── Fullscreen layout ────────────────────────────────────────────
+  if (fullscreen && inCall) return (
     <>
-      {/* Fullscreen */}
-      {fullscreen && inCall && (
-        <div onMouseMove={resetTimer}
-          style={{ position: "fixed", inset: 0, zIndex: 200, background: "#000", display: "flex", flexDirection: "column" }}>
-          <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
-            {isScreenSharing && screenStream ? (
-              <ScreenTile screenStream={screenStream} large />
-            ) : participants[0]?.stream ? (
-              <div style={{ flex: 1 }}>
-                <ParticipantTile stream={participants[0].stream} label={participants[0].username} />
-              </div>
-            ) : (
-              <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12, color: "rgba(255,255,255,0.3)" }}>
-                <div style={{ fontSize: 48 }}>👥</div>
-                <p style={{ fontSize: 14 }}>Waiting for participants...</p>
+      <div onMouseMove={resetTimer} style={{
+        position: "fixed", inset: 0, zIndex: 200,
+        background: "radial-gradient(ellipse at 20% 50%, #0a0f2e 0%, #040612 60%, #020308 100%)",
+        display: "flex", flexDirection: "column",
+      }}>
+        {/* Participant grid */}
+        {allInCall.length <= 2 ? (
+          // 1-2 people: elegant split
+          <div style={{ flex: 1, minHeight: 0, display: "flex", gap: 3, padding: 6 }}>
+            {isScreenSharing && screenStream && (
+              <div style={{ flex: 2, borderRadius: 16, overflow: "hidden", background: "#040612", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <VideoEl stream={screenStream} muted contain />
               </div>
             )}
+            {allInCall.map((p, i) => {
+              const isBig = !isScreenSharing && allInCall.length === 1;
+              return (
+                <div key={p.socketId} style={{
+                  flex: isScreenSharing ? 1 : (i === 0 && allInCall.length === 2 ? 3 : 2),
+                  borderRadius: 16, overflow: "hidden",
+                  background: `hsl(${(p.username?.charCodeAt(0)||0)*37%360},25%,10%)`,
+                  border: "1px solid rgba(255,255,255,0.05)",
+                  boxShadow: "inset 0 0 60px rgba(0,0,0,0.5)",
+                  transition: "flex .4s ease",
+                }}>
+                  <Tile stream={p.stream} label={p.username} muted={p.isLocal}
+                    isLocal={p.isLocal} isCameraOff={p.isLocal && isCameraOff} large={isBig} />
+                </div>
+              );
+            })}
           </div>
-
-          {/* Strip */}
-          <div style={{ height: 130, background: "rgba(0,0,0,0.9)", display: "flex", alignItems: "center", gap: 8, padding: "0 16px", overflowX: "auto", flexShrink: 0, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-            {allInCall.map((p) => (
-              <div key={p.socketId} style={{ width: 180, flexShrink: 0 }}>
-                <ParticipantTile stream={p.stream} label={p.username} muted={p.isLocal} isLocal={p.isLocal} isCameraOff={p.isLocal && isCameraOff} />
+        ) : (
+          // 3+ people: grid
+          <div style={{ flex: 1, minHeight: 0, display: "grid", gap: 4, padding: 6,
+            gridTemplateColumns: allInCall.length <= 4 ? "repeat(2, 1fr)" : "repeat(3, 1fr)",
+          }}>
+            {isScreenSharing && screenStream && (
+              <div style={{ gridColumn: "1/-1", borderRadius: 14, overflow: "hidden", background: "#040612" }}>
+                <VideoEl stream={screenStream} muted contain />
+              </div>
+            )}
+            {allInCall.map(p => (
+              <div key={p.socketId} style={{ borderRadius: 14, overflow: "hidden" }}>
+                <Tile stream={p.stream} label={p.username} muted={p.isLocal}
+                  isLocal={p.isLocal} isCameraOff={p.isLocal && isCameraOff} />
               </div>
             ))}
           </div>
+        )}
 
-          {/* Controls */}
-          <div style={{ position: "absolute", bottom: 146, left: "50%", transform: "translateX(-50%)", display: "flex", alignItems: "center", gap: 10, background: "rgba(0,0,0,0.8)", padding: "12px 20px", borderRadius: 40, backdropFilter: "blur(16px)", transition: "opacity 0.3s", opacity: showControls ? 1 : 0, pointerEvents: showControls ? "auto" : "none" }}>
-            <CtrlBtn onClick={onToggleMute} active={isMuted} title={isMuted ? "Unmute" : "Mute"} size={46}>{isMuted ? <MicOff size={18} /> : <Mic size={18} />}</CtrlBtn>
-            <CtrlBtn onClick={onToggleCamera} active={isCameraOff} title={isCameraOff ? "Camera on" : "Camera off"} size={46}>{isCameraOff ? <VideoOff size={18} /> : <Video size={18} />}</CtrlBtn>
-            <CtrlBtn onClick={onToggleScreen} active={isScreenSharing} title={isScreenSharing ? "Stop sharing" : "Share screen"} size={46}>{isScreenSharing ? <MonitorOff size={18} /> : <Monitor size={18} />}</CtrlBtn>
-            <CtrlBtn onClick={onLeave} danger title="Leave call" size={46}><PhoneOff size={18} /></CtrlBtn>
-            <div style={{ width: 1, height: 26, background: "rgba(255,255,255,0.15)", margin: "0 4px" }} />
-            <CtrlBtn onClick={() => setFullscreen(false)} title="Exit fullscreen" size={46}><Minimize2 size={18} /></CtrlBtn>
-          </div>
-
-          <button onClick={() => setFullscreen(false)} style={{ position: "absolute", top: 14, right: 14, width: 34, height: 34, borderRadius: "50%", background: "rgba(255,255,255,0.1)", border: "none", cursor: "pointer", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", opacity: showControls ? 1 : 0, transition: "opacity 0.3s" }}>
-            <X size={15} />
-          </button>
+        {/* Floating controls */}
+        <div style={{
+          position: "absolute", bottom: 28, left: "50%", transform: "translateX(-50%)",
+          display: "flex", alignItems: "center", gap: 12,
+          background: "rgba(4,6,18,0.85)", backdropFilter: "blur(20px) saturate(180%)",
+          padding: "14px 28px", borderRadius: 50,
+          border: "1px solid rgba(255,255,255,0.08)",
+          boxShadow: "0 8px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)",
+          transition: "opacity .4s, transform .4s",
+          opacity: showControls ? 1 : 0, pointerEvents: showControls ? "auto" : "none",
+          transform: `translateX(-50%) translateY(${showControls ? 0 : 16}px)`,
+        }}>
+          <FsBtn onClick={onToggleMute}   active={isMuted}         title={isMuted?"Unmute":"Mute"}          size={52}>{isMuted?<MicOff size={20}/>:<Mic size={20}/>}</FsBtn>
+          <FsBtn onClick={onToggleCamera} active={isCameraOff}     title={isCameraOff?"Camera on":"Camera off"} size={52}>{isCameraOff?<VideoOff size={20}/>:<Video size={20}/>}</FsBtn>
+          <FsBtn onClick={onToggleScreen} active={isScreenSharing} title={isScreenSharing?"Stop sharing":"Share screen"} size={52}>{isScreenSharing?<MonitorOff size={20}/>:<Monitor size={20}/>}</FsBtn>
+          <div style={{ width: 1, height: 32, background: "rgba(255,255,255,0.12)", margin: "0 4px" }} />
+          <FsBtn onClick={onLeave} danger title="Leave" size={52}><PhoneOff size={20}/></FsBtn>
+          <div style={{ width: 1, height: 32, background: "rgba(255,255,255,0.12)", margin: "0 4px" }} />
+          <FsBtn onClick={() => setFullscreen(false)} title="Exit fullscreen" size={44}><Minimize2 size={17}/></FsBtn>
         </div>
-      )}
 
-      {/* Side panel */}
-      <div style={{ width: 230, background: "var(--surface)", borderLeft: "1px solid var(--border)", display: "flex", flexDirection: "column", flexShrink: 0 }}>
-        <div style={{ padding: "11px 14px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            {inCall && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--green)", animation: "vsp 1.5s infinite" }} />}
-            <h3 style={{ fontSize: 12, fontWeight: 600, color: "var(--text)" }}>
-              {inCall ? `Voice · ${allInCall.length}` : "Voice & Video"}
-            </h3>
+        {/* Top-right close */}
+        <button onClick={() => setFullscreen(false)} style={{
+          position: "absolute", top: 16, right: 16,
+          width: 38, height: 38, borderRadius: "50%",
+          background: "rgba(255,255,255,0.08)", backdropFilter: "blur(8px)",
+          border: "1px solid rgba(255,255,255,0.12)",
+          cursor: "pointer", color: "rgba(255,255,255,0.7)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          transition: "all .2s", opacity: showControls ? 1 : 0,
+        }}
+          onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.15)"; e.currentTarget.style.color = "#fff"; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}>
+          <Minimize2 size={15} />
+        </button>
+
+        {/* Call info badge */}
+        <div style={{
+          position: "absolute", top: 16, left: "50%", transform: "translateX(-50%)",
+          display: "flex", alignItems: "center", gap: 8,
+          background: "rgba(4,6,18,0.7)", backdropFilter: "blur(12px)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          padding: "6px 16px", borderRadius: 30,
+          opacity: showControls ? 1 : 0, transition: "opacity .4s",
+        }}>
+          <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e", animation: "vsp 1.5s infinite" }} />
+          <span style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.8)" }}>
+            {allInCall.length} оролцогч
+          </span>
+        </div>
+      </div>
+      <style>{`@keyframes vsp{0%,100%{opacity:1}50%{opacity:0.4}}`}</style>
+    </>
+  );
+
+  // ── Side panel ───────────────────────────────────────────────────
+  return (
+    <>
+      <div style={{
+        width: panelW, background: P.bg,
+        borderLeft: `1px solid ${P.border}`,
+        display: "flex", flexDirection: "column", flexShrink: 0,
+        position: "relative",
+        transition: dragging ? "none" : "width .2s ease",
+        userSelect: dragging ? "none" : "auto",
+      }}>
+        {/* Drag handle */}
+        <div onMouseDown={onDragStart} style={{
+          position: "absolute", left: 0, top: 0, bottom: 0, width: 5,
+          cursor: "ew-resize", zIndex: 10,
+          background: dragging ? "rgba(107,115,153,0.35)" : "transparent",
+          transition: "background .15s",
+        }}
+          onMouseEnter={e => { if (!dragging) e.currentTarget.style.background = "rgba(107,115,153,0.2)"; }}
+          onMouseLeave={e => { if (!dragging) e.currentTarget.style.background = "transparent"; }} />
+
+        {/* Header */}
+        <div style={{
+          padding: "12px 14px 12px 18px",
+          borderBottom: `1px solid ${P.border}`,
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          background: isDark ? "rgba(27,48,102,0.08)" : "rgba(27,48,102,0.03)",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {inCall && (
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e", animation: "vsp 1.5s infinite", flexShrink: 0 }} />
+            )}
+            <span style={{ fontSize: 12, fontWeight: 700, color: P.text }}>
+              {inCall ? `Дуудлага · ${allInCall.length}` : "Дуу & Видео"}
+            </span>
           </div>
           <div style={{ display: "flex", gap: 4 }}>
             {inCall ? (
-              <button onClick={() => setFullscreen(true)} title="Fullscreen"
-                style={{ width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer", color: "var(--text5)", borderRadius: 5, transition: "all 0.15s" }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = "var(--text)"; e.currentTarget.style.background = "var(--surface2)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text5)"; e.currentTarget.style.background = "none"; }}>
-                <Maximize2 size={12} />
+              <button onClick={() => setFullscreen(true)} title="Fullscreen" style={{
+                width: 26, height: 26, borderRadius: 7, border: "none",
+                background: "transparent", cursor: "pointer", color: P.muted, transition: "all .15s",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}
+                onMouseEnter={e => { e.currentTarget.style.color = P.text; e.currentTarget.style.background = P.bg2; }}
+                onMouseLeave={e => { e.currentTarget.style.color = P.muted; e.currentTarget.style.background = "transparent"; }}>
+                <Maximize2 size={13} />
               </button>
             ) : (
-              <>
-                <button onClick={onJoinAudio} title="Join audio"
-                  style={{ width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--surface2)", border: "1px solid var(--border2)", borderRadius: 6, cursor: "pointer", color: "var(--text4)", transition: "all 0.15s" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "var(--text)"; e.currentTarget.style.borderColor = "var(--text5)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text4)"; e.currentTarget.style.borderColor = "var(--border2)"; }}>
-                  <Phone size={12} />
-                </button>
-                <button onClick={onJoinVideo} title="Join video"
-                  style={{ width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--surface2)", border: "1px solid var(--border2)", borderRadius: 6, cursor: "pointer", color: "var(--text4)", transition: "all 0.15s" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "var(--text)"; e.currentTarget.style.borderColor = "var(--text5)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text4)"; e.currentTarget.style.borderColor = "var(--border2)"; }}>
-                  <Video size={12} />
-                </button>
-              </>
+              <div style={{ display: "flex", gap: 4 }}>
+                {[{ fn: onJoinAudio, icon: <Phone size={12} />, tip: "Дуут дуудлага" },
+                  { fn: onJoinVideo, icon: <Video size={12} />, tip: "Видео дуудлага" }].map((b, i) => (
+                  <button key={i} onClick={b.fn} title={b.tip} style={{
+                    width: 26, height: 26, borderRadius: 7,
+                    background: P.bg2, border: `1px solid ${P.border}`,
+                    cursor: "pointer", color: P.muted, transition: "all .15s",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}
+                    onMouseEnter={e => { e.currentTarget.style.color = P.text; e.currentTarget.style.borderColor = "#6B7399"; }}
+                    onMouseLeave={e => { e.currentTarget.style.color = P.muted; e.currentTarget.style.borderColor = P.border; }}>
+                    {b.icon}
+                  </button>
+                ))}
+              </div>
             )}
           </div>
         </div>
 
-        <div style={{ flex: 1, overflowY: "auto", padding: "8px", display: "flex", flexDirection: "column", gap: 8 }}>
+        {/* Content */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "8px 10px 8px 14px", display: "flex", flexDirection: "column", gap: 6 }}>
           {!inCall ? (
-            <div style={{ textAlign: "center", padding: "32px 0", color: "var(--text5)" }}>
-              <Phone size={22} style={{ margin: "0 auto 8px", opacity: 0.3 }} />
-              <p style={{ fontSize: 12, marginBottom: 4 }}>No one in call</p>
-              <p style={{ fontSize: 11 }}>Click 📞 or 📹 to join</p>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 0", gap: 10 }}>
+              <div style={{
+                width: 52, height: 52, borderRadius: 16,
+                background: isDark ? "rgba(27,48,102,0.2)" : "rgba(27,48,102,0.07)",
+                border: `1px solid ${P.border}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <Phone size={20} color={P.muted} strokeWidth={1.5} />
+              </div>
+              <p style={{ fontSize: 12, fontWeight: 600, color: P.muted, textAlign: "center" }}>Дуудлага байхгүй</p>
+              <p style={{ fontSize: 11, color: P.muted, textAlign: "center", opacity: 0.7 }}>📞 эсвэл 📹 дарж нэгдэнэ үү</p>
             </div>
           ) : (
             <>
-              {isScreenSharing && screenStream && <ScreenTile screenStream={screenStream} />}
-              {allInCall.map((p) => (
-                <ParticipantTile
-                  key={p.socketId}
-                  stream={p.stream}
-                  label={p.username}
-                  muted={p.isLocal}
-                  isLocal={p.isLocal}
-                  isCameraOff={p.isLocal && isCameraOff}
-                />
-              ))}
+              {isScreenSharing && screenStream && (
+                <div style={{ borderRadius: 10, overflow: "hidden", border: "1px solid rgba(107,115,153,0.2)", background: "#040612" }}>
+                  <video autoPlay playsInline muted
+                    ref={el => { if (el && screenStream) { el.srcObject = screenStream; el.play().catch(() => {}); } }}
+                    style={{ width: "100%", aspectRatio: "16/9", objectFit: "contain", display: "block" }} />
+                </div>
+              )}
+              <div style={{
+                display: "grid", gap: 6,
+                gridTemplateColumns: allInCall.length >= 3 ? "1fr 1fr" : "1fr",
+              }}>
+                {allInCall.map(p => (
+                  <Tile key={p.socketId} stream={p.stream} label={p.username}
+                    muted={p.isLocal} isLocal={p.isLocal} isCameraOff={p.isLocal && isCameraOff} />
+                ))}
+              </div>
             </>
           )}
         </div>
 
+        {/* Call controls */}
         {inCall && (
-          <div style={{ padding: "10px 8px", borderTop: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-            <CtrlBtn onClick={onToggleMute} active={isMuted} title={isMuted ? "Unmute" : "Mute"} size={34}>{isMuted ? <MicOff size={13} /> : <Mic size={13} />}</CtrlBtn>
-            <CtrlBtn onClick={onToggleCamera} active={isCameraOff} title={isCameraOff ? "Camera on" : "Camera off"} size={34}>{isCameraOff ? <VideoOff size={13} /> : <Video size={13} />}</CtrlBtn>
-            <CtrlBtn onClick={onToggleScreen} active={isScreenSharing} title={isScreenSharing ? "Stop sharing" : "Share screen"} size={34}>{isScreenSharing ? <MonitorOff size={13} /> : <Monitor size={13} />}</CtrlBtn>
-            <CtrlBtn onClick={onLeave} danger title="Leave call" size={34}><PhoneOff size={13} /></CtrlBtn>
+          <div style={{
+            padding: "10px 12px 12px",
+            borderTop: `1px solid ${P.border}`,
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+            background: isDark ? "rgba(8,11,42,0.3)" : "rgba(240,240,245,0.8)",
+          }}>
+            <PanelBtn onClick={onToggleMute}   active={isMuted}         isDark={isDark} title={isMuted?"Unmute":"Mute"}          size={38}>{isMuted?<MicOff size={14}/>:<Mic size={14}/>}</PanelBtn>
+            <PanelBtn onClick={onToggleCamera} active={isCameraOff}     isDark={isDark} title={isCameraOff?"Camera on":"Camera off"} size={38}>{isCameraOff?<VideoOff size={14}/>:<Video size={14}/>}</PanelBtn>
+            <PanelBtn onClick={onToggleScreen} active={isScreenSharing} isDark={isDark} title={isScreenSharing?"Stop":"Share"} size={38}>{isScreenSharing?<MonitorOff size={14}/>:<Monitor size={14}/>}</PanelBtn>
+            <PanelBtn onClick={onLeave} danger isDark={isDark} title="Leave" size={38}><PhoneOff size={14}/></PanelBtn>
           </div>
         )}
       </div>
-      <style>{`@keyframes vsp { 0%,100%{opacity:1} 50%{opacity:0.4} }`}</style>
+      <style>{`@keyframes vsp{0%,100%{opacity:1}50%{opacity:0.4}}`}</style>
     </>
   );
-};
-
-export default VideoSidePanel;
+}

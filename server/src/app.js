@@ -11,15 +11,15 @@ import channelRoutes from "./routes/channel.routes.js";
 import messageRoutes from "./routes/message.routes.js";
 import uploadRoutes from "./routes/upload.routes.js";
 import reactionRoutes from "./routes/reaction.routes.js";
-
-import { errorHandler } from "./middleware/errorHandler.js";
-import { notFound } from "./middleware/notFound.js";
-import { initSocket } from "./socket/index.js";
 import dmRoutes from "./routes/dm.routes.js";
 import friendRoutes from "./routes/friend.routes.js";
 import blockRoutes from "./routes/block.routes.js";
 import banRoutes from "./routes/ban.routes.js";
+import threadRoutes from "./routes/thread.routes.js";
 
+import { errorHandler } from "./middleware/errorHandler.js";
+import { notFound } from "./middleware/notFound.js";
+import { initSocket } from "./socket/index.js";
 
 dotenv.config();
 
@@ -29,18 +29,34 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const httpServer = createServer(app);
 
-app.use(cors());
-app.use(express.json());
+// ── CORS ─────────────────────────────────────────────────────────
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map(o => o.trim())
+  : ["http://localhost:5173", "http://localhost:3000"];
 
-// Serve uploaded files
+app.use(cors({
+  origin: (origin, cb) => {
+    // Allow no-origin (curl, mobile, server-to-server) or whitelisted origins
+    if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== "production") {
+      cb(null, true);
+    } else {
+      cb(new Error(`CORS blocked: ${origin}`));
+    }
+  },
+  credentials: true,
+}));
+
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+// ── Static uploads ───────────────────────────────────────────────
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Health check
-app.get("/", (req, res) => {
-  res.json({ ok: true, message: "Server is running" });
-});
+// ── Health check ─────────────────────────────────────────────────
+app.get("/", (req, res) => res.json({ ok: true, message: "AuraSync API running", version: "1.0.0" }));
+app.get("/health", (req, res) => res.json({ ok: true, uptime: process.uptime() }));
 
-// Routes
+// ── Routes ───────────────────────────────────────────────────────
 app.use("/api/auth", authRoutes);
 app.use("/api/workspaces", workspaceRoutes);
 app.use("/api/channels", channelRoutes);
@@ -51,17 +67,18 @@ app.use("/api/dm", dmRoutes);
 app.use("/api/friends", friendRoutes);
 app.use("/api/blocks", blockRoutes);
 app.use("/api/bans", banRoutes);
+app.use("/api/threads", threadRoutes);
 
-// Middleware
+// ── Error handlers ───────────────────────────────────────────────
 app.use(notFound);
 app.use(errorHandler);
 
-// Init Socket.IO
+// ── Socket.IO ────────────────────────────────────────────────────
 initSocket(httpServer);
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 httpServer.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`✅ AuraSync server running on port ${PORT} [${process.env.NODE_ENV || "development"}]`);
 });
 
 export default app;

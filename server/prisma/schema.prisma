@@ -86,6 +86,7 @@ model Message {
   fileType  String?
   deleted   Boolean  @default(false)
   pinned    Boolean  @default(false)
+  replyTo   Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

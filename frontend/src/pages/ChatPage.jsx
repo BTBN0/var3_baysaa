@@ -3,7 +3,6 @@ import { useParams } from "react-router-dom";
 import api from "../api/axios.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useSocket } from "../context/SocketContext.jsx";
-import { useStory } from "../context/StoryContext.jsx";
 import useWebRTC from "../hooks/useWebRTC.js";
 import Sidebar from "../components/sidebar/Sidebar.jsx";
 import ChatHeader from "../components/chat/ChatHeader.jsx";
@@ -14,15 +13,11 @@ import MemberList from "../components/chat/MemberList.jsx";
 import VideoSidePanel from "../components/ui/VideoSidePanel.jsx";
 import SearchModal from "../components/ui/SearchModal.jsx";
 import ProfilePage from "./ProfilePage.jsx";
-import StoryBar from "../components/story/StoryBar.jsx";
-import StoryViewer from "../components/story/StoryViewer.jsx";
-import StoryCreator from "../components/story/StoryCreator.jsx";
 
 const ChatPage = () => {
   const { workspaceId, channelId } = useParams();
   const { user } = useAuth();
   const { socket, onlineUsers } = useSocket();
-  const { allStories } = useStory();
 
   const [workspaces, setWorkspaces] = useState([]);
   const [channels, setChannels] = useState([]);
@@ -36,8 +31,6 @@ const ChatPage = () => {
   const [showSearch, setShowSearch] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [replyTo, setReplyTo] = useState(null);
-  const [storyUser,   setStoryUser]   = useState(null);
-  const [showCreator, setShowCreator] = useState(false);
   const [pinnedMessages, setPinnedMessages] = useState([]);
 
   const currentChannelId = useRef(channelId);
@@ -188,7 +181,7 @@ const ChatPage = () => {
 
   return (
     <div style={{ display: "flex", height: "100vh", background: "var(--bg)", overflow: "hidden", animation: "fadeIn .25s ease both" }}>
-      <Sidebar workspaces={workspaces} channels={channels} setChannels={setChannels} currentWorkspace={currentWorkspace} onProfileOpen={() => setShowProfile(true)} onStoryOpen={u => setStoryUser(u)} onAddStory={() => setShowCreator(true)} />
+      <Sidebar workspaces={workspaces} channels={channels} setChannels={setChannels} currentWorkspace={currentWorkspace} onProfileOpen={() => setShowProfile(true)} />
 
       <div style={{ flex: 1, display: "flex", minWidth: 0 }}>
         {/* Chat area */}
@@ -201,9 +194,6 @@ const ChatPage = () => {
             onSearch={() => setShowSearch(true)}
             workspaceId={workspaceId}
             isOwner={isOwner}
-            onOpenStory={() => setStoryUser(allStories?.[0] || { userId: "none" })}
-            onAddStory={() => setShowCreator(true)}
-            onStoryOpen={u => setStoryUser(u)}
           />
           <PinnedMessage messages={pinnedMessages} onUnpin={handlePin} />
           <MessageList
@@ -262,14 +252,6 @@ const ChatPage = () => {
 
       {showProfile && (
         <ProfilePage onClose={() => setShowProfile(false)} />
-      )}
-
-      {storyUser && (
-        <StoryViewer userId={storyUser.userId} onClose={() => setStoryUser(null)} />
-      )}
-
-      {showCreator && (
-        <StoryCreator onClose={() => setShowCreator(false)} />
       )}
     </div>
   );

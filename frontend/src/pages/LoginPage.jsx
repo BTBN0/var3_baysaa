@@ -45,7 +45,8 @@ const LoginPage = () => {
       const res = await api.post("/auth/google", { credential: credentialResponse.credential });
       const { token, user } = res.data.data;
       loginWithToken(token, user);
-      navigate("/dashboard");
+      const redir = new URLSearchParams(window.location.search).get('redirect');
+      navigate(redir || "/dashboard");
     } catch (err) {
       setError(err.response?.data?.message || "Google нэвтрэлт амжилтгүй");
     } finally { setLoading(false); }

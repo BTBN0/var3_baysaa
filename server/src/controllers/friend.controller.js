@@ -10,7 +10,7 @@ export const sendRequest = async (req, res, next) => {
       return res.status(400).json({ ok: false, message: "Username is required" });
     }
 
-    const receiver = await prisma.user.findUnique({ where: { username } });
+    const receiver = await prisma.user.findFirst({ where: { username } });
 
     if (!receiver) {
       return res.status(404).json({ ok: false, message: "User not found" });

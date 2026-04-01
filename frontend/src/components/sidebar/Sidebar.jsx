@@ -4,11 +4,11 @@ import { useAuth } from "../../context/AuthContext.jsx";
 import { useSocket } from "../../context/SocketContext.jsx";
 import { Bell, Users, LogOut, Hash, MessageSquare, UserPlus, ChevronDown, ChevronRight, Plus, Settings, Sun, Moon } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext.jsx";
-import { useStory } from "../../context/StoryContext.jsx";
-import StoryRing from "../story/StoryRing.jsx";
 import WorkspaceList from "./WorkspaceList.jsx";
 import ChannelList from "./ChannelList.jsx";
 import NotificationBell from "../ui/NotificationBell.jsx";
+import CreateWorkspaceModal from "../ui/CreateWorkspaceModal.jsx";
+import WorkspaceSettingsModal from "../ui/WorkspaceSettingsModal.jsx";
 import api from "../../api/axios.js";
 
 const Avatar = ({ user, size = 28 }) => {
@@ -45,12 +45,12 @@ const WorkspaceAvatar = ({ workspace, size = 32 }) => {
   );
 };
 
-const Sidebar = ({ workspaces, channels, setChannels, currentWorkspace, onProfileOpen, onStoryOpen, onAddStory }) => {
+const Sidebar = ({ workspaces, channels, setChannels, currentWorkspace, onProfileOpen, onWorkspaceCreated }) => {
   const { user, logout } = useAuth();
   const { theme, toggle } = useTheme();
   const { onlineUsers } = useSocket();
-  const { allStories, myStories } = useStory();
   const navigate = useNavigate();
+  const [showCreateWs, setShowCreateWs] = useState(false);
   const { workspaceId } = useParams();
 
   const [tab, setTab] = useState("channels");
@@ -61,7 +61,9 @@ const Sidebar = ({ workspaces, channels, setChannels, currentWorkspace, onProfil
   const [showOnline, setShowOnline] = useState(true);
   const [showOffline, setShowOffline] = useState(true);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [showWsSettings, setShowWsSettings] = useState(false);
   const avatarInputRef = useRef(null);
+  const wsAvatarRef = useRef(null);
 
   const isOwner = workspaces.find(w => w.id === workspaceId) && true;
 
@@ -110,6 +112,7 @@ const Sidebar = ({ workspaces, channels, setChannels, currentWorkspace, onProfil
   const memberRowStyle = { display: "flex", alignItems: "center", gap: 9, padding: "5px 8px", borderRadius: 7, cursor: "pointer", transition: "background 0.1s" };
 
   return (
+    <>
     <div style={{ display: "flex", height: "100%" }}>
       {/* Workspace rail */}
       <div style={{ width: 58, background: "var(--surface)", borderRight: "1px solid var(--border)", display: "flex", flexDirection: "column", alignItems: "center", padding: "10px 0", gap: 6 }}>
@@ -123,71 +126,34 @@ const Sidebar = ({ workspaces, channels, setChannels, currentWorkspace, onProfil
         </div>
         <div style={{ width: 24, height: 1, background: "var(--border)", margin: "2px 0" }} />
         <WorkspaceList workspaces={workspaces} />
-
-        {/* Story rings in rail */}
+        {/* Add workspace button */}
         <div style={{ width: 24, height: 1, background: "var(--border)", margin: "2px 0" }} />
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, overflowY: "auto", scrollbarWidth: "none", maxHeight: 200 }}>
-          {/* My story / add */}
-          {(() => {
-            const SKINS = [{bg:"#FDDBB4",fg:"#8B5E3C"},{bg:"#F5C99A",fg:"#7A4A2A"},{bg:"#E8A87C",fg:"#6B3820"},{bg:"#C68642",fg:"#3E1F00"},{bg:"#8D5524",fg:"#FFD5A8"},{bg:"#4A2912",fg:"#F5C99A"},{bg:"#DBEAFE",fg:"#1D4ED8"},{bg:"#EDE9FE",fg:"#7C3AED"},{bg:"#FCE7F3",fg:"#BE185D"},{bg:"#D1FAE5",fg:"#065F46"}];
-            // We need profile from auth context - get it from the rendered scope
-            return null;
-          })()}
-          {allStories.slice(0, 5).map(group => (
-            <div key={group.userId} title={group.userName} style={{ position: "relative" }}>
-              <StoryRing
-                user={{ id: group.userId, initials: group.userInitials, bg: group.userBg, color: group.userColor }}
-                size={34}
-                hasStory={true}
-                seen={group.seen}
-                onClick={() => onStoryOpen?.({ userId: group.userId })}
-              />
-              {!group.seen && (
-                <span style={{
-                  position: "absolute", top: -2, right: -2,
-                  width: 8, height: 8, borderRadius: "50%",
-                  background: "linear-gradient(135deg,#1B3066,#6B7399)",
-                  border: "1.5px solid var(--surface)",
-                }} />
-              )}
-            </div>
-          ))}
-          {/* Add story button */}
-          <button onClick={() => onAddStory?.()} title="Story нэмэх" style={{
-            width: 34, height: 34, borderRadius: "50%",
-            background: "var(--surface2)",
-            border: "1.5px dashed var(--border2)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer", color: "var(--text5)", transition: "all .15s", flexShrink: 0,
-          }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = "#6B7399"; e.currentTarget.style.color = "#6B7399"; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border2)"; e.currentTarget.style.color = "var(--text5)"; }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-          </button>
-        </div>
+        <button
+          onClick={() => setShowCreateWs(true)}
+          title="Workspace нэмэх"
+          style={{ width: 36, height: 36, borderRadius: 10, background: "var(--surface2)", border: "1px dashed var(--border2)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--text5)", transition: "all .15s", flexShrink: 0 }}
+          onMouseEnter={e => { e.currentTarget.style.background = "rgba(27,48,102,0.3)"; e.currentTarget.style.borderColor = "#6B7399"; e.currentTarget.style.color = "#6B7399"; e.currentTarget.style.borderStyle = "solid"; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "var(--surface2)"; e.currentTarget.style.borderColor = "var(--border2)"; e.currentTarget.style.color = "var(--text5)"; e.currentTarget.style.borderStyle = "dashed"; }}
+        >
+          <Plus size={14} />
+        </button>
       </div>
 
       {/* Main panel */}
       <div style={{ width: 210, background: "var(--surface)", display: "flex", flexDirection: "column", borderRight: "1px solid var(--border)" }}>
         {/* Workspace header */}
-        <div style={{ padding: "10px 12px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 9 }}>
-          <div style={{ position: "relative" }}>
-            <div
-              onClick={() => avatarInputRef.current?.click()}
-              title="Change workspace avatar"
-              style={{ cursor: "pointer", opacity: uploadingAvatar ? 0.5 : 1 }}
-            >
-              <WorkspaceAvatar workspace={currentWorkspace} size={30} />
-            </div>
-            <input ref={avatarInputRef} type="file" accept="image/*" onChange={handleWorkspaceAvatarUpload} style={{ display: "none" }} />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {currentWorkspace?.name || "Workspace"}
-            </p>
-          </div>
+        <div style={{ padding: "10px 12px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 8 }}>
+          <WorkspaceAvatar workspace={currentWorkspace} size={28} />
+          <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {currentWorkspace?.name || "Workspace"}
+          </p>
+          {/* Settings button */}
+          <button onClick={() => setShowWsSettings(true)} title="Workspace тохиргоо"
+            style={{ width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer", color: "var(--text5)", borderRadius: 5, transition: "all .15s", flexShrink: 0 }}
+            onMouseEnter={e => { e.currentTarget.style.color = "var(--text)"; e.currentTarget.style.background = "var(--surface2)"; }}
+            onMouseLeave={e => { e.currentTarget.style.color = "var(--text5)"; e.currentTarget.style.background = "none"; }}>
+            <Settings size={13} />
+          </button>
         </div>
 
         {/* Tabs */}
@@ -344,6 +310,25 @@ const Sidebar = ({ workspaces, channels, setChannels, currentWorkspace, onProfil
         </div>
       </div>
     </div>
+
+    {showCreateWs && (
+      <CreateWorkspaceModal
+        onClose={() => setShowCreateWs(false)}
+        onCreated={(ws) => {
+          onWorkspaceCreated?.();
+          navigate(`/chat/${ws.id}/${ws.channels?.[0]?.id || "none"}`);
+        }}
+      />
+    )}
+
+    {showWsSettings && currentWorkspace && (
+      <WorkspaceSettingsModal
+        workspace={currentWorkspace}
+        workspaceId={workspaceId}
+        onClose={() => setShowWsSettings(false)}
+      />
+    )}
+    </>
   );
 };
 

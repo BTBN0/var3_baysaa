@@ -4,224 +4,163 @@ import { setUserOnline, setUserOffline, getExistingSocket } from "./presence.js"
 import { setIO } from "./socket.js";
 import prisma from "../lib/prisma.js";
 
-// Safely extract username from decoded JWT — handles multiple field name conventions
-const extractUsername = (decoded) => {
-  return (
-    decoded.username ||
-    decoded.name ||
-    decoded.displayName ||
-    decoded.email?.split("@")[0] ||
-    `user_${decoded.id?.slice(0, 6)}` ||
-    "Unknown"
-  );
-};
+// Find socket by userId
+const findSocket = (io, userId) =>
+  [...io.sockets.sockets.values()].find(s => s.user?.id === userId) || null;
 
 export const initSocket = (httpServer) => {
   const io = new Server(httpServer, {
     cors: { origin: "*", methods: ["GET", "POST"] },
+    pingTimeout: 60000,
+    pingInterval: 25000,
   });
 
   setIO(io);
 
+  // Auth middleware
   io.use((socket, next) => {
     const token = socket.handshake.auth.token;
-    if (!token) return next(new Error("No token provided"));
+    if (!token) return next(new Error("No token"));
     try {
       const decoded = verifyToken(token);
-      // Debug — remove this after confirming username works
-      console.log("decoded token fields:", Object.keys(decoded));
-      // Normalize — always have username on socket.user
       socket.user = {
-        ...decoded,
-        username: extractUsername(decoded),
+        id:       decoded.id,
+        username: decoded.username || decoded.email?.split("@")[0] || "User",
       };
       next();
-    } catch (err) {
+    } catch {
       next(new Error("Invalid token"));
     }
   });
 
   io.on("connection", async (socket) => {
-    const user = socket.user;
-    console.log(`User connected: ${user.username} (${socket.id})`);
+    const { id: userId, username } = socket.user;
+    console.log(`[Socket] connected: ${username} (${socket.id})`);
 
     // Single session enforcement
-    const existingSocketId = getExistingSocket(user.id);
-    if (existingSocketId && existingSocketId !== socket.id) {
-      const existingSocket = io.sockets.sockets.get(existingSocketId);
-      if (existingSocket) {
-        existingSocket.emit("session_expired", { message: "You logged in from another device." });
-        existingSocket.disconnect(true);
-      }
+    const existing = getExistingSocket(userId);
+    if (existing && existing !== socket.id) {
+      io.sockets.sockets.get(existing)?.emit("session_expired", { message: "Өөр төхөөрөмжөөс нэвтэрлээ." });
+      io.sockets.sockets.get(existing)?.disconnect(true);
     }
 
-    setUserOnline(user.id, socket.id);
-    io.emit("user_online", { userId: user.id });
+    setUserOnline(userId, socket.id);
+    io.emit("user_online", { userId });
 
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { lastSeen: new Date() },
-    }).catch(() => {});
+    // Update lastSeen
+    prisma.user.update({ where: { id: userId }, data: { lastSeen: new Date() } }).catch(() => {});
 
-    socket.on("join_workspace", (workspaceId) => {
-      socket.join(`workspace:${workspaceId}`);
-    });
+    // ── Workspace / Channel ──────────────────────────────────────
+    socket.on("join_workspace", (workspaceId) => socket.join(`workspace:${workspaceId}`));
+    socket.on("join_channel",   (channelId)   => socket.join(`channel:${channelId}`));
 
-    socket.on("join_channel", (channelId) => {
-      socket.join(`channel:${channelId}`);
-    });
-
+    // ── Channel Messages ─────────────────────────────────────────
     socket.on("send_message", (message) => {
       io.to(`channel:${message.channelId}`).emit("new_message", message);
     });
-
     socket.on("delete_message", ({ messageId, channelId }) => {
       io.to(`channel:${channelId}`).emit("message_deleted", { messageId });
     });
-
     socket.on("message_edited", ({ message, channelId }) => {
       io.to(`channel:${channelId}`).emit("message_edited", { message, channelId });
     });
-
     socket.on("message_pinned", ({ message, channelId }) => {
       io.to(`channel:${channelId}`).emit("message_pinned", { message, channelId });
     });
-
     socket.on("reaction_updated", ({ messageId, channelId, reactions }) => {
       io.to(`channel:${channelId}`).emit("reaction_updated", { messageId, reactions });
     });
 
+    // ── Typing ───────────────────────────────────────────────────
     socket.on("typing_start", ({ channelId }) => {
-      socket.to(`channel:${channelId}`).emit("user_typing", {
-        userId: user.id,
-        username: user.username,
-        typing: true,
-      });
+      socket.to(`channel:${channelId}`).emit("user_typing", { userId, username, typing: true });
     });
-
     socket.on("typing_stop", ({ channelId }) => {
-      socket.to(`channel:${channelId}`).emit("user_typing", {
-        userId: user.id,
-        username: user.username,
-        typing: false,
-      });
+      socket.to(`channel:${channelId}`).emit("user_typing", { userId, username, typing: false });
     });
 
-    // ── Channel calls ──────────────────────────────────────────────
+    // ── Channel Voice/Video Calls ────────────────────────────────
     socket.on("call_join", ({ channelId }) => {
       socket.join(`channel:${channelId}`);
-      socket.to(`channel:${channelId}`).emit("call_user_joined", {
-        userId: user.id,
-        username: user.username,
-        socketId: socket.id,
-      });
-      console.log(`${user.username} joined call in channel:${channelId}`);
+      socket.to(`channel:${channelId}`).emit("call_user_joined", { userId, username, socketId: socket.id });
     });
-
     socket.on("call_leave", ({ channelId }) => {
-      socket.to(`channel:${channelId}`).emit("call_user_left", {
-        userId: user.id,
-        username: user.username,
-      });
+      socket.to(`channel:${channelId}`).emit("call_user_left", { userId, username });
     });
-
     socket.on("call_offer", ({ offer, toSocketId }) => {
-      io.to(toSocketId).emit("call_offer", {
-        offer,
-        fromSocketId: socket.id,
-        username: user.username,
-        userId: user.id,
-      });
+      io.to(toSocketId).emit("call_offer", { offer, fromSocketId: socket.id, username, userId });
     });
-
     socket.on("call_answer", ({ answer, toSocketId }) => {
-      io.to(toSocketId).emit("call_answer", {
-        answer,
-        fromSocketId: socket.id,
-        username: user.username,
-        userId: user.id,
-      });
+      io.to(toSocketId).emit("call_answer", { answer, fromSocketId: socket.id, username, userId });
     });
-
     socket.on("call_ice_candidate", ({ candidate, toSocketId }) => {
-      io.to(toSocketId).emit("call_ice_candidate", {
-        candidate,
-        fromSocketId: socket.id,
-      });
+      io.to(toSocketId).emit("call_ice_candidate", { candidate, fromSocketId: socket.id });
     });
 
-    // ── DM calls ───────────────────────────────────────────────────
-    socket.on("dm_send", ({ toUserId, message }) => {
-      const targetSocket = [...io.sockets.sockets.values()].find(
-        (s) => s.user?.id === toUserId
-      );
-      if (targetSocket) targetSocket.emit("dm_new_message", message);
-    });
-
+    // ── DM Direct Calls ──────────────────────────────────────────
     socket.on("dm_call_offer", ({ offer, toUserId, withVideo }) => {
-      const targetSocket = [...io.sockets.sockets.values()].find(
-        (s) => s.user?.id === toUserId
-      );
-      if (targetSocket) {
-        targetSocket.emit("dm_call_offer", {
-          offer,
+      if (!offer?.type || !offer?.sdp) {
+        console.error(`[DM-Call] bad offer from ${username}`);
+        return;
+      }
+      const target = findSocket(io, toUserId);
+      if (target) {
+        console.log(`[DM-Call] offer: ${username} → ${target.user.username}`);
+        target.emit("dm_call_offer", {
+          offer: { type: offer.type, sdp: offer.sdp },
           fromSocketId: socket.id,
-          fromUserId: user.id,
-          fromUsername: user.username,
-          withVideo: withVideo || false,
+          fromUserId: userId,
+          fromUsername: username,
+          withVideo: !!withVideo,
         });
+      } else {
+        console.warn(`[DM-Call] ${toUserId} offline`);
+        socket.emit("dm_call_user_offline", { toUserId });
       }
     });
 
     socket.on("dm_call_answer", ({ answer, toSocketId }) => {
+      if (!answer?.type || !answer?.sdp) {
+        console.error(`[DM-Call] bad answer from ${username}`);
+        return;
+      }
+      console.log(`[DM-Call] answer: ${username} → ${toSocketId}`);
       io.to(toSocketId).emit("dm_call_answer", {
-        answer,
+        answer: { type: answer.type, sdp: answer.sdp },
         fromSocketId: socket.id,
       });
     });
 
     socket.on("dm_call_ice_candidate", ({ candidate, toSocketId }) => {
-      io.to(toSocketId).emit("dm_call_ice_candidate", {
-        candidate,
-        fromSocketId: socket.id,
-      });
+      if (!candidate || !toSocketId) return;
+      io.to(toSocketId).emit("dm_call_ice_candidate", { candidate, fromSocketId: socket.id });
     });
 
     socket.on("dm_call_end", ({ toUserId }) => {
-      const targetSocket = [...io.sockets.sockets.values()].find(
-        (s) => s.user?.id === toUserId
-      );
-      if (targetSocket) targetSocket.emit("dm_call_ended", { fromUserId: user.id });
+      const target = findSocket(io, toUserId);
+      if (target) target.emit("dm_call_ended", { fromUserId: userId });
     });
 
-    // ── Friends ────────────────────────────────────────────────────
+    // ── DM Messages ──────────────────────────────────────────────
+    socket.on("dm_send", ({ toUserId, message }) => {
+      const target = findSocket(io, toUserId);
+      if (target) target.emit("dm_new_message", message);
+    });
+
+    // ── Friends ──────────────────────────────────────────────────
     socket.on("friend_request_sent", ({ toUserId, request }) => {
-      const targetSocket = [...io.sockets.sockets.values()].find(
-        (s) => s.user?.id === toUserId
-      );
-      if (targetSocket) targetSocket.emit("friend_request_received", request);
+      findSocket(io, toUserId)?.emit("friend_request_received", request);
     });
-
     socket.on("friend_request_accepted", ({ toUserId }) => {
-      const targetSocket = [...io.sockets.sockets.values()].find(
-        (s) => s.user?.id === toUserId
-      );
-      if (targetSocket) {
-        targetSocket.emit("friend_accepted", {
-          userId: user.id,
-          username: user.username,
-        });
-      }
+      findSocket(io, toUserId)?.emit("friend_accepted", { userId, username });
     });
 
+    // ── Disconnect ───────────────────────────────────────────────
     socket.on("disconnect", async () => {
-      console.log(`User disconnected: ${user.username}`);
-      setUserOffline(user.id);
-      io.emit("user_offline", { userId: user.id });
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { lastSeen: new Date() },
-      }).catch(() => {});
+      console.log(`[Socket] disconnected: ${username}`);
+      setUserOffline(userId);
+      io.emit("user_offline", { userId });
+      prisma.user.update({ where: { id: userId }, data: { lastSeen: new Date() } }).catch(() => {});
     });
   });
 

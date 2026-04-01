@@ -4,41 +4,48 @@ import { useAuth } from "./AuthContext.jsx";
 
 const SocketContext = createContext(null);
 
+const SOCKET_URL = (import.meta.env.VITE_API_URL || "http://localhost:3001/api").replace("/api", "");
+
 export const SocketProvider = ({ children }) => {
-  const { token } = useAuth();
-  const [socket, setSocket] = useState(null);
-  const [onlineUsers, setOnlineUsers] = useState([]);
+  const { token }                             = useAuth();
+  const [socket, setSocket]                   = useState(null);
+  const [onlineUsers, setOnlineUsers]         = useState([]);
 
   useEffect(() => {
-    if (!token) return;
+    if (!token) {
+      setSocket(null);
+      setOnlineUsers([]);
+      return;
+    }
 
-    const newSocket = io("http://localhost:3001", { auth: { token } });
-
-    newSocket.on("connect", () => console.log("Socket connected"));
-
-    newSocket.on("user_online", ({ userId }) => {
-      setOnlineUsers((prev) => [...new Set([...prev, userId])]);
+    const s = io(SOCKET_URL, {
+      auth: { token },
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 20000,
     });
 
-    newSocket.on("user_offline", ({ userId }) => {
-      setOnlineUsers((prev) => prev.filter((id) => id !== userId));
-    });
+    s.on("connect",       () => console.log("✅ Socket connected:", s.id));
+    s.on("connect_error", (e) => console.error("❌ Socket error:", e.message));
+    s.on("disconnect",    (r) => console.log("🔌 Socket disconnected:", r));
 
-    // Kicked from workspace
-    newSocket.on("kicked_from_workspace", ({ workspaceId, message }) => {
-      alert(`You have been banned from this workspace.\n\nReason: ${message}`);
+    s.on("user_online",  ({ userId }) => setOnlineUsers(p => [...new Set([...p, userId])]));
+    s.on("user_offline", ({ userId }) => setOnlineUsers(p => p.filter(id => id !== userId)));
+
+    s.on("kicked_from_workspace", ({ message }) => {
+      alert(`Та энэ workspace-аас хасагдлаа.\nШалтгаан: ${message}`);
       window.location.href = "/dashboard";
     });
 
-    // Session expired — logged in from another device
-    newSocket.on("session_expired", ({ message }) => {
+    s.on("session_expired", ({ message }) => {
       localStorage.removeItem("token");
-      alert(`Session expired: ${message}`);
       window.location.href = "/login";
     });
 
-    setSocket(newSocket);
-    return () => newSocket.disconnect();
+    setSocket(s);
+    return () => { s.disconnect(); setSocket(null); };
   }, [token]);
 
   return (

@@ -3,7 +3,7 @@ import prisma from "../lib/prisma.js";
 export const sendMessage = async (req, res, next) => {
   try {
     const { channelId } = req.params;
-    const { content, fileUrl, fileType } = req.body;
+    const { content, fileUrl, fileType, replyTo } = req.body;
     const userId = req.user.id;
 
     if (!content && !fileUrl) {
@@ -25,6 +25,7 @@ export const sendMessage = async (req, res, next) => {
         content: content?.trim() || "",
         fileUrl: fileUrl || null,
         fileType: fileType || null,
+        replyTo: replyTo ? JSON.stringify(replyTo) : null,
         user: { connect: { id: userId } },
         channel: { connect: { id: channelId } },
       },
@@ -53,6 +54,9 @@ export const getMessages = async (req, res, next) => {
         user: { select: { id: true, username: true, avatar: true } },
         reactions: {
           include: { user: { select: { id: true, username: true } } },
+        },
+        thread: {
+          include: { replies: { select: { id: true } } },
         },
       },
       orderBy: { createdAt: "desc" },
