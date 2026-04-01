@@ -181,7 +181,7 @@ const Sidebar = ({ workspaces, channels, setChannels, currentWorkspace, onProfil
         <div style={{ flex: 1, overflowY: "auto", padding: "6px" }}>
 
           {/* Channels tab */}
-          {tab === "channels" && <ChannelList channels={channels} setChannels={setChannels} />}
+          {tab === "channels" && <ChannelList channels={channels} setChannels={setChannels} currentWorkspace={currentWorkspace} />}
 
           {/* DMs tab */}
           {tab === "dms" && (

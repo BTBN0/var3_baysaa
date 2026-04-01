@@ -3,9 +3,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Hash, Plus, Volume2, Lock } from "lucide-react";
 import api from "../../api/axios.js";
 
-const ChannelList = ({ channels, setChannels }) => {
+const ChannelList = ({ channels, setChannels, currentWorkspace }) => {
   const navigate = useNavigate();
-  const { channelId, workspaceId } = useParams();
+  const params = useParams();
+  const channelId = params.channelId;
+  const workspaceId = params.workspaceId || currentWorkspace?.id;
   const [showCreate, setShowCreate] = useState(false);
   const [newChannelName, setNewChannelName] = useState("");
   const [creating, setCreating] = useState(false);
