@@ -1,4 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
+import Logo from "../ui/Logo.jsx";
+import { imgUrl, API_BASE } from "../../utils/url.js";
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { useSocket } from "../../context/SocketContext.jsx";
@@ -20,7 +22,7 @@ const Avatar = ({ user, size = 28 }) => {
     "linear-gradient(135deg,#f59e0b,#ef4444)",
   ];
   const gradient = gradients[user?.username?.charCodeAt(0) % gradients.length] || gradients[0];
-  if (user?.avatar) return <img src={user.avatar} alt={user.username} style={{ width: size, height: size, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />;
+  if (user?.avatar) return <img src={imgUrl(user.avatar)} alt={user.username} style={{ width: size, height: size, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />;
   return (
     <div style={{ width: size, height: size, borderRadius: "50%", background: gradient, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: size * 0.38, fontWeight: 600, flexShrink: 0 }}>
       {user?.username?.[0]?.toUpperCase()}
@@ -37,7 +39,7 @@ const WorkspaceAvatar = ({ workspace, size = 32 }) => {
     "linear-gradient(135deg,#f59e0b,#ef4444)",
   ];
   const gradient = gradients[workspace?.name?.charCodeAt(0) % gradients.length] || gradients[0];
-  if (workspace?.avatar) return <img src={workspace.avatar} alt={workspace.name} style={{ width: size, height: size, borderRadius: 10, objectFit: "cover", flexShrink: 0 }} />;
+  if (workspace?.avatar) return <img src={imgUrl(workspace.avatar)} alt={workspace.name} style={{ width: size, height: size, borderRadius: 10, objectFit: "cover", flexShrink: 0 }} />;
   return (
     <div style={{ width: size, height: size, borderRadius: 10, background: gradient, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: size * 0.38, fontWeight: 700, flexShrink: 0 }}>
       {workspace?.name?.[0]?.toUpperCase()}
@@ -62,10 +64,21 @@ const Sidebar = ({ workspaces, channels, setChannels, currentWorkspace, onProfil
   const [showOffline, setShowOffline] = useState(true);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [showWsSettings, setShowWsSettings] = useState(false);
+  const [wsRole, setWsRole] = useState("MEMBER");
   const avatarInputRef = useRef(null);
   const wsAvatarRef = useRef(null);
 
   const isOwner = workspaces.find(w => w.id === workspaceId) && true;
+
+  // Load current user's role in workspace
+  useEffect(() => {
+    const wsId = workspaceId || currentWorkspace?.id;
+    if (!wsId || !user?.id) return;
+    api.get(`/workspaces/${wsId}/members`).then(res => {
+      const me = (res.data.data || []).find(m => m.id === user.id);
+      setWsRole(me?.role || "MEMBER");
+    }).catch(() => setWsRole("MEMBER"));
+  }, [workspaceId, currentWorkspace?.id, user?.id, workspaces.length]);
 
   useEffect(() => {
     if (!workspaceId) return;
@@ -120,9 +133,9 @@ const Sidebar = ({ workspaces, channels, setChannels, currentWorkspace, onProfil
         <div
           onClick={() => navigate("/dashboard")}
           title="Dashboard"
-          style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#1B3066,#2a4080)", border: "1px solid var(--border2)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", marginBottom: 4, boxShadow: "0 2px 8px rgba(0,0,0,0.3)", flexShrink: 0 }}
+          style={{ cursor: "pointer", marginBottom: 4, flexShrink: 0 }}
         >
-          <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text)", letterSpacing: -0.5 }}>AS</span>
+          <Logo size={36} showText={false} />
         </div>
         <div style={{ width: 24, height: 1, background: "var(--border)", margin: "2px 0" }} />
         <WorkspaceList workspaces={workspaces} />
@@ -147,13 +160,34 @@ const Sidebar = ({ workspaces, channels, setChannels, currentWorkspace, onProfil
           <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {currentWorkspace?.name || "Workspace"}
           </p>
-          {/* Settings button */}
-          <button onClick={() => setShowWsSettings(true)} title="Workspace тохиргоо"
+          {/* Settings button — owner only */}
+          {wsRole === "OWNER" && <button onClick={() => setShowWsSettings(true)} title="Workspace тохиргоо"
             style={{ width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer", color: "var(--text5)", borderRadius: 5, transition: "all .15s", flexShrink: 0 }}
             onMouseEnter={e => { e.currentTarget.style.color = "var(--text)"; e.currentTarget.style.background = "var(--surface2)"; }}
             onMouseLeave={e => { e.currentTarget.style.color = "var(--text5)"; e.currentTarget.style.background = "none"; }}>
             <Settings size={13} />
-          </button>
+          </button>}
+          {/* Leave button — member only */}
+          {wsRole === "MEMBER" && currentWorkspace && (
+            <button
+              title="Workspace-аас гарах"
+              onClick={async () => {
+                if (!window.confirm(`"${currentWorkspace.name}" workspace-аас гарах уу?`)) return;
+                try {
+                  await api.delete(`/workspaces/${workspaceId || currentWorkspace.id}/leave`);
+                  navigate("/dashboard");
+                  window.location.reload();
+                } catch (err) {
+                  alert(err.response?.data?.message || "Алдаа гарлаа");
+                }
+              }}
+              style={{ width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer", color: "var(--text5)", borderRadius: 5, transition: "all .15s", flexShrink: 0 }}
+              onMouseEnter={e => { e.currentTarget.style.color = "#f87171"; e.currentTarget.style.background = "rgba(239,68,68,0.1)"; }}
+              onMouseLeave={e => { e.currentTarget.style.color = "var(--text5)"; e.currentTarget.style.background = "none"; }}
+            >
+              <LogOut size={13} />
+            </button>
+          )}
         </div>
 
         {/* Tabs */}
@@ -324,7 +358,7 @@ const Sidebar = ({ workspaces, channels, setChannels, currentWorkspace, onProfil
     {showWsSettings && currentWorkspace && (
       <WorkspaceSettingsModal
         workspace={currentWorkspace}
-        workspaceId={workspaceId}
+        workspaceId={workspaceId || currentWorkspace?.id}
         onClose={() => setShowWsSettings(false)}
       />
     )}

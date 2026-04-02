@@ -6,7 +6,7 @@ import { useTheme } from "../../context/ThemeContext.jsx";
 import { useRingtone } from "../../hooks/useRingtone.js";
 import { Phone, PhoneOff, Video } from "lucide-react";
 
-const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:3001/api").replace("/api","");
+const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:3000/api").replace("/api","");
 
 export default function CallToastManager() {
   const { socket }                           = useSocket();

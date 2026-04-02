@@ -211,3 +211,17 @@ body.cursor-none, body.cursor-none * { cursor: none !important; }
 
 /* Hover state utility */
 .hover-navy:hover { background: rgba(107,115,153,0.15) !important; }
+
+/* ── Custom cursor ─────────────────────────────── */
+*, *::before, *::after {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='4' fill='%234d8fff' fill-opacity='0.85'/%3E%3Ccircle cx='10' cy='10' r='2' fill='white'/%3E%3C/svg%3E") 10 10, auto !important;
+}
+
+button, a, [role="button"], select, input[type="submit"],
+input[type="button"], label[for], .cursor-pointer {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='5' fill='%234d8fff'/%3E%3Ccircle cx='10' cy='10' r='2.5' fill='white'/%3E%3C/svg%3E") 10 10, pointer !important;
+}
+
+input, textarea {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='20' viewBox='0 0 4 20'%3E%3Crect x='1.5' y='0' width='1' height='20' rx='0.5' fill='%234d8fff'/%3E%3C/svg%3E") 2 10, text !important;
+}

@@ -262,11 +262,25 @@ export default function CallPage() {
     remoteSocket.current = null;
     hasRemote.current    = false;
     iceBuf.current       = [];
-    if (emit && socket) socket.emit("dm_call_end", {
-      toUserId: userId,
-      duration: finalElapsed,
-      withVideo: hasVideo,
-    });
+    if (emit && socket) {
+      // Store call log in sessionStorage as backup (in case socket event arrives before DMPage mounts)
+      const callLogBackup = {
+        type: "call_log",
+        withVideo: hasVideo,
+        duration: finalElapsed > 0 ? `${Math.floor(finalElapsed/60) > 0 ? Math.floor(finalElapsed/60)+"м " : ""}${finalElapsed%60}с` : null,
+        callerId: socket.id,  // will be resolved by backend
+        time: new Date().toISOString(),
+        id: `call_${Date.now()}`,
+        partnerId: userId,
+        elapsed: finalElapsed,
+      };
+      try { sessionStorage.setItem("lastCallLog", JSON.stringify(callLogBackup)); } catch {}
+      socket.emit("dm_call_end", {
+        toUserId: userId,
+        duration: finalElapsed,
+        withVideo: hasVideo,
+      });
+    }
     setStatus("ended");
     setTimeout(() => navigate(`/dm/${userId}`), 900);
   }, [socket, userId, navigate, elapsed, hasVideo]);

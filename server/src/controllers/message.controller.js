@@ -25,7 +25,7 @@ export const sendMessage = async (req, res, next) => {
         content: content?.trim() || "",
         fileUrl: fileUrl || null,
         fileType: fileType || null,
-        replyTo: replyTo ? JSON.stringify(replyTo) : null,
+        replyTo: replyTo || null,
         user: { connect: { id: userId } },
         channel: { connect: { id: channelId } },
       },

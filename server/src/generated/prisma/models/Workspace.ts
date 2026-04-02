@@ -201,6 +201,7 @@ export type WorkspaceWhereInput = {
   members?: Prisma.WorkspaceMemberListRelationFilter
   channels?: Prisma.ChannelListRelationFilter
   bans?: Prisma.WorkspaceBanListRelationFilter
+  roles?: Prisma.WorkspaceRoleListRelationFilter
 }
 
 export type WorkspaceOrderByWithRelationInput = {
@@ -214,6 +215,7 @@ export type WorkspaceOrderByWithRelationInput = {
   members?: Prisma.WorkspaceMemberOrderByRelationAggregateInput
   channels?: Prisma.ChannelOrderByRelationAggregateInput
   bans?: Prisma.WorkspaceBanOrderByRelationAggregateInput
+  roles?: Prisma.WorkspaceRoleOrderByRelationAggregateInput
   _relevance?: Prisma.WorkspaceOrderByRelevanceInput
 }
 
@@ -231,6 +233,7 @@ export type WorkspaceWhereUniqueInput = Prisma.AtLeast<{
   members?: Prisma.WorkspaceMemberListRelationFilter
   channels?: Prisma.ChannelListRelationFilter
   bans?: Prisma.WorkspaceBanListRelationFilter
+  roles?: Prisma.WorkspaceRoleListRelationFilter
 }, "id" | "inviteCode">
 
 export type WorkspaceOrderByWithAggregationInput = {
@@ -270,6 +273,7 @@ export type WorkspaceCreateInput = {
   members?: Prisma.WorkspaceMemberCreateNestedManyWithoutWorkspaceInput
   channels?: Prisma.ChannelCreateNestedManyWithoutWorkspaceInput
   bans?: Prisma.WorkspaceBanCreateNestedManyWithoutWorkspaceInput
+  roles?: Prisma.WorkspaceRoleCreateNestedManyWithoutWorkspaceInput
 }
 
 export type WorkspaceUncheckedCreateInput = {
@@ -283,6 +287,7 @@ export type WorkspaceUncheckedCreateInput = {
   members?: Prisma.WorkspaceMemberUncheckedCreateNestedManyWithoutWorkspaceInput
   channels?: Prisma.ChannelUncheckedCreateNestedManyWithoutWorkspaceInput
   bans?: Prisma.WorkspaceBanUncheckedCreateNestedManyWithoutWorkspaceInput
+  roles?: Prisma.WorkspaceRoleUncheckedCreateNestedManyWithoutWorkspaceInput
 }
 
 export type WorkspaceUpdateInput = {
@@ -296,6 +301,7 @@ export type WorkspaceUpdateInput = {
   members?: Prisma.WorkspaceMemberUpdateManyWithoutWorkspaceNestedInput
   channels?: Prisma.ChannelUpdateManyWithoutWorkspaceNestedInput
   bans?: Prisma.WorkspaceBanUpdateManyWithoutWorkspaceNestedInput
+  roles?: Prisma.WorkspaceRoleUpdateManyWithoutWorkspaceNestedInput
 }
 
 export type WorkspaceUncheckedUpdateInput = {
@@ -309,6 +315,7 @@ export type WorkspaceUncheckedUpdateInput = {
   members?: Prisma.WorkspaceMemberUncheckedUpdateManyWithoutWorkspaceNestedInput
   channels?: Prisma.ChannelUncheckedUpdateManyWithoutWorkspaceNestedInput
   bans?: Prisma.WorkspaceBanUncheckedUpdateManyWithoutWorkspaceNestedInput
+  roles?: Prisma.WorkspaceRoleUncheckedUpdateManyWithoutWorkspaceNestedInput
 }
 
 export type WorkspaceCreateManyInput = {
@@ -396,6 +403,20 @@ export type WorkspaceUpdateOneRequiredWithoutMembersNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.WorkspaceUpdateToOneWithWhereWithoutMembersInput, Prisma.WorkspaceUpdateWithoutMembersInput>, Prisma.WorkspaceUncheckedUpdateWithoutMembersInput>
 }
 
+export type WorkspaceCreateNestedOneWithoutRolesInput = {
+  create?: Prisma.XOR<Prisma.WorkspaceCreateWithoutRolesInput, Prisma.WorkspaceUncheckedCreateWithoutRolesInput>
+  connectOrCreate?: Prisma.WorkspaceCreateOrConnectWithoutRolesInput
+  connect?: Prisma.WorkspaceWhereUniqueInput
+}
+
+export type WorkspaceUpdateOneRequiredWithoutRolesNestedInput = {
+  create?: Prisma.XOR<Prisma.WorkspaceCreateWithoutRolesInput, Prisma.WorkspaceUncheckedCreateWithoutRolesInput>
+  connectOrCreate?: Prisma.WorkspaceCreateOrConnectWithoutRolesInput
+  upsert?: Prisma.WorkspaceUpsertWithoutRolesInput
+  connect?: Prisma.WorkspaceWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.WorkspaceUpdateToOneWithWhereWithoutRolesInput, Prisma.WorkspaceUpdateWithoutRolesInput>, Prisma.WorkspaceUncheckedUpdateWithoutRolesInput>
+}
+
 export type WorkspaceCreateNestedOneWithoutChannelsInput = {
   create?: Prisma.XOR<Prisma.WorkspaceCreateWithoutChannelsInput, Prisma.WorkspaceUncheckedCreateWithoutChannelsInput>
   connectOrCreate?: Prisma.WorkspaceCreateOrConnectWithoutChannelsInput
@@ -434,6 +455,7 @@ export type WorkspaceCreateWithoutMembersInput = {
   updatedAt?: Date | string
   channels?: Prisma.ChannelCreateNestedManyWithoutWorkspaceInput
   bans?: Prisma.WorkspaceBanCreateNestedManyWithoutWorkspaceInput
+  roles?: Prisma.WorkspaceRoleCreateNestedManyWithoutWorkspaceInput
 }
 
 export type WorkspaceUncheckedCreateWithoutMembersInput = {
@@ -446,6 +468,7 @@ export type WorkspaceUncheckedCreateWithoutMembersInput = {
   updatedAt?: Date | string
   channels?: Prisma.ChannelUncheckedCreateNestedManyWithoutWorkspaceInput
   bans?: Prisma.WorkspaceBanUncheckedCreateNestedManyWithoutWorkspaceInput
+  roles?: Prisma.WorkspaceRoleUncheckedCreateNestedManyWithoutWorkspaceInput
 }
 
 export type WorkspaceCreateOrConnectWithoutMembersInput = {
@@ -474,6 +497,7 @@ export type WorkspaceUpdateWithoutMembersInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   channels?: Prisma.ChannelUpdateManyWithoutWorkspaceNestedInput
   bans?: Prisma.WorkspaceBanUpdateManyWithoutWorkspaceNestedInput
+  roles?: Prisma.WorkspaceRoleUpdateManyWithoutWorkspaceNestedInput
 }
 
 export type WorkspaceUncheckedUpdateWithoutMembersInput = {
@@ -484,6 +508,75 @@ export type WorkspaceUncheckedUpdateWithoutMembersInput = {
   avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  channels?: Prisma.ChannelUncheckedUpdateManyWithoutWorkspaceNestedInput
+  bans?: Prisma.WorkspaceBanUncheckedUpdateManyWithoutWorkspaceNestedInput
+  roles?: Prisma.WorkspaceRoleUncheckedUpdateManyWithoutWorkspaceNestedInput
+}
+
+export type WorkspaceCreateWithoutRolesInput = {
+  id?: string
+  name: string
+  description?: string | null
+  inviteCode?: string
+  avatar?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  members?: Prisma.WorkspaceMemberCreateNestedManyWithoutWorkspaceInput
+  channels?: Prisma.ChannelCreateNestedManyWithoutWorkspaceInput
+  bans?: Prisma.WorkspaceBanCreateNestedManyWithoutWorkspaceInput
+}
+
+export type WorkspaceUncheckedCreateWithoutRolesInput = {
+  id?: string
+  name: string
+  description?: string | null
+  inviteCode?: string
+  avatar?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  members?: Prisma.WorkspaceMemberUncheckedCreateNestedManyWithoutWorkspaceInput
+  channels?: Prisma.ChannelUncheckedCreateNestedManyWithoutWorkspaceInput
+  bans?: Prisma.WorkspaceBanUncheckedCreateNestedManyWithoutWorkspaceInput
+}
+
+export type WorkspaceCreateOrConnectWithoutRolesInput = {
+  where: Prisma.WorkspaceWhereUniqueInput
+  create: Prisma.XOR<Prisma.WorkspaceCreateWithoutRolesInput, Prisma.WorkspaceUncheckedCreateWithoutRolesInput>
+}
+
+export type WorkspaceUpsertWithoutRolesInput = {
+  update: Prisma.XOR<Prisma.WorkspaceUpdateWithoutRolesInput, Prisma.WorkspaceUncheckedUpdateWithoutRolesInput>
+  create: Prisma.XOR<Prisma.WorkspaceCreateWithoutRolesInput, Prisma.WorkspaceUncheckedCreateWithoutRolesInput>
+  where?: Prisma.WorkspaceWhereInput
+}
+
+export type WorkspaceUpdateToOneWithWhereWithoutRolesInput = {
+  where?: Prisma.WorkspaceWhereInput
+  data: Prisma.XOR<Prisma.WorkspaceUpdateWithoutRolesInput, Prisma.WorkspaceUncheckedUpdateWithoutRolesInput>
+}
+
+export type WorkspaceUpdateWithoutRolesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  inviteCode?: Prisma.StringFieldUpdateOperationsInput | string
+  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  members?: Prisma.WorkspaceMemberUpdateManyWithoutWorkspaceNestedInput
+  channels?: Prisma.ChannelUpdateManyWithoutWorkspaceNestedInput
+  bans?: Prisma.WorkspaceBanUpdateManyWithoutWorkspaceNestedInput
+}
+
+export type WorkspaceUncheckedUpdateWithoutRolesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  inviteCode?: Prisma.StringFieldUpdateOperationsInput | string
+  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  members?: Prisma.WorkspaceMemberUncheckedUpdateManyWithoutWorkspaceNestedInput
   channels?: Prisma.ChannelUncheckedUpdateManyWithoutWorkspaceNestedInput
   bans?: Prisma.WorkspaceBanUncheckedUpdateManyWithoutWorkspaceNestedInput
 }
@@ -498,6 +591,7 @@ export type WorkspaceCreateWithoutChannelsInput = {
   updatedAt?: Date | string
   members?: Prisma.WorkspaceMemberCreateNestedManyWithoutWorkspaceInput
   bans?: Prisma.WorkspaceBanCreateNestedManyWithoutWorkspaceInput
+  roles?: Prisma.WorkspaceRoleCreateNestedManyWithoutWorkspaceInput
 }
 
 export type WorkspaceUncheckedCreateWithoutChannelsInput = {
@@ -510,6 +604,7 @@ export type WorkspaceUncheckedCreateWithoutChannelsInput = {
   updatedAt?: Date | string
   members?: Prisma.WorkspaceMemberUncheckedCreateNestedManyWithoutWorkspaceInput
   bans?: Prisma.WorkspaceBanUncheckedCreateNestedManyWithoutWorkspaceInput
+  roles?: Prisma.WorkspaceRoleUncheckedCreateNestedManyWithoutWorkspaceInput
 }
 
 export type WorkspaceCreateOrConnectWithoutChannelsInput = {
@@ -538,6 +633,7 @@ export type WorkspaceUpdateWithoutChannelsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.WorkspaceMemberUpdateManyWithoutWorkspaceNestedInput
   bans?: Prisma.WorkspaceBanUpdateManyWithoutWorkspaceNestedInput
+  roles?: Prisma.WorkspaceRoleUpdateManyWithoutWorkspaceNestedInput
 }
 
 export type WorkspaceUncheckedUpdateWithoutChannelsInput = {
@@ -550,6 +646,7 @@ export type WorkspaceUncheckedUpdateWithoutChannelsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.WorkspaceMemberUncheckedUpdateManyWithoutWorkspaceNestedInput
   bans?: Prisma.WorkspaceBanUncheckedUpdateManyWithoutWorkspaceNestedInput
+  roles?: Prisma.WorkspaceRoleUncheckedUpdateManyWithoutWorkspaceNestedInput
 }
 
 export type WorkspaceCreateWithoutBansInput = {
@@ -562,6 +659,7 @@ export type WorkspaceCreateWithoutBansInput = {
   updatedAt?: Date | string
   members?: Prisma.WorkspaceMemberCreateNestedManyWithoutWorkspaceInput
   channels?: Prisma.ChannelCreateNestedManyWithoutWorkspaceInput
+  roles?: Prisma.WorkspaceRoleCreateNestedManyWithoutWorkspaceInput
 }
 
 export type WorkspaceUncheckedCreateWithoutBansInput = {
@@ -574,6 +672,7 @@ export type WorkspaceUncheckedCreateWithoutBansInput = {
   updatedAt?: Date | string
   members?: Prisma.WorkspaceMemberUncheckedCreateNestedManyWithoutWorkspaceInput
   channels?: Prisma.ChannelUncheckedCreateNestedManyWithoutWorkspaceInput
+  roles?: Prisma.WorkspaceRoleUncheckedCreateNestedManyWithoutWorkspaceInput
 }
 
 export type WorkspaceCreateOrConnectWithoutBansInput = {
@@ -602,6 +701,7 @@ export type WorkspaceUpdateWithoutBansInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.WorkspaceMemberUpdateManyWithoutWorkspaceNestedInput
   channels?: Prisma.ChannelUpdateManyWithoutWorkspaceNestedInput
+  roles?: Prisma.WorkspaceRoleUpdateManyWithoutWorkspaceNestedInput
 }
 
 export type WorkspaceUncheckedUpdateWithoutBansInput = {
@@ -614,6 +714,7 @@ export type WorkspaceUncheckedUpdateWithoutBansInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.WorkspaceMemberUncheckedUpdateManyWithoutWorkspaceNestedInput
   channels?: Prisma.ChannelUncheckedUpdateManyWithoutWorkspaceNestedInput
+  roles?: Prisma.WorkspaceRoleUncheckedUpdateManyWithoutWorkspaceNestedInput
 }
 
 
@@ -625,12 +726,14 @@ export type WorkspaceCountOutputType = {
   members: number
   channels: number
   bans: number
+  roles: number
 }
 
 export type WorkspaceCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   members?: boolean | WorkspaceCountOutputTypeCountMembersArgs
   channels?: boolean | WorkspaceCountOutputTypeCountChannelsArgs
   bans?: boolean | WorkspaceCountOutputTypeCountBansArgs
+  roles?: boolean | WorkspaceCountOutputTypeCountRolesArgs
 }
 
 /**
@@ -664,6 +767,13 @@ export type WorkspaceCountOutputTypeCountBansArgs<ExtArgs extends runtime.Types.
   where?: Prisma.WorkspaceBanWhereInput
 }
 
+/**
+ * WorkspaceCountOutputType without action
+ */
+export type WorkspaceCountOutputTypeCountRolesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.WorkspaceRoleWhereInput
+}
+
 
 export type WorkspaceSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -676,6 +786,7 @@ export type WorkspaceSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   members?: boolean | Prisma.Workspace$membersArgs<ExtArgs>
   channels?: boolean | Prisma.Workspace$channelsArgs<ExtArgs>
   bans?: boolean | Prisma.Workspace$bansArgs<ExtArgs>
+  roles?: boolean | Prisma.Workspace$rolesArgs<ExtArgs>
   _count?: boolean | Prisma.WorkspaceCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["workspace"]>
 
@@ -696,6 +807,7 @@ export type WorkspaceInclude<ExtArgs extends runtime.Types.Extensions.InternalAr
   members?: boolean | Prisma.Workspace$membersArgs<ExtArgs>
   channels?: boolean | Prisma.Workspace$channelsArgs<ExtArgs>
   bans?: boolean | Prisma.Workspace$bansArgs<ExtArgs>
+  roles?: boolean | Prisma.Workspace$rolesArgs<ExtArgs>
   _count?: boolean | Prisma.WorkspaceCountOutputTypeDefaultArgs<ExtArgs>
 }
 
@@ -705,6 +817,7 @@ export type $WorkspacePayload<ExtArgs extends runtime.Types.Extensions.InternalA
     members: Prisma.$WorkspaceMemberPayload<ExtArgs>[]
     channels: Prisma.$ChannelPayload<ExtArgs>[]
     bans: Prisma.$WorkspaceBanPayload<ExtArgs>[]
+    roles: Prisma.$WorkspaceRolePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1057,6 +1170,7 @@ export interface Prisma__WorkspaceClient<T, Null = never, ExtArgs extends runtim
   members<T extends Prisma.Workspace$membersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Workspace$membersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WorkspaceMemberPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   channels<T extends Prisma.Workspace$channelsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Workspace$channelsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ChannelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   bans<T extends Prisma.Workspace$bansArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Workspace$bansArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WorkspaceBanPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  roles<T extends Prisma.Workspace$rolesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Workspace$rolesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WorkspaceRolePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1510,6 +1624,30 @@ export type Workspace$bansArgs<ExtArgs extends runtime.Types.Extensions.Internal
   take?: number
   skip?: number
   distinct?: Prisma.WorkspaceBanScalarFieldEnum | Prisma.WorkspaceBanScalarFieldEnum[]
+}
+
+/**
+ * Workspace.roles
+ */
+export type Workspace$rolesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the WorkspaceRole
+   */
+  select?: Prisma.WorkspaceRoleSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the WorkspaceRole
+   */
+  omit?: Prisma.WorkspaceRoleOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.WorkspaceRoleInclude<ExtArgs> | null
+  where?: Prisma.WorkspaceRoleWhereInput
+  orderBy?: Prisma.WorkspaceRoleOrderByWithRelationInput | Prisma.WorkspaceRoleOrderByWithRelationInput[]
+  cursor?: Prisma.WorkspaceRoleWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.WorkspaceRoleScalarFieldEnum | Prisma.WorkspaceRoleScalarFieldEnum[]
 }
 
 /**

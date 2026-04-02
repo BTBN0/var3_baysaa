@@ -160,3 +160,25 @@ export const getPendingRequests = async (req, res, next) => {
     next(err);
   }
 };
+// DELETE /api/friends/:userId — unfriend
+export const unfriend = async (req, res, next) => {
+  try {
+    const { userId: targetId } = req.params;
+    const myId = req.user.id;
+
+    const request = await prisma.friendRequest.findFirst({
+      where: {
+        OR: [
+          { senderId: myId,     receiverId: targetId },
+          { senderId: targetId, receiverId: myId },
+        ],
+        status: "ACCEPTED",
+      },
+    });
+
+    if (!request) return res.status(404).json({ ok: false, message: "Найзын холбоо олдсонгүй" });
+
+    await prisma.friendRequest.delete({ where: { id: request.id } });
+    res.json({ ok: true, message: "Найзаас хасагдлаа" });
+  } catch (err) { next(err); }
+};

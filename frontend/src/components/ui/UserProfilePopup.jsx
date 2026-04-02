@@ -19,7 +19,7 @@ const AVATAR_GRADIENTS = [
   "linear-gradient(135deg,#16a34a,#4ade80)",
 ];
 
-const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:3001/api").replace("/api", "");
+const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:3000/api").replace("/api", "");
 
 const UserProfilePopup = ({ user, position, onClose }) => {
   const { user: currentUser, profile } = useAuth();

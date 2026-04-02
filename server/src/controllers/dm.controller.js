@@ -1,4 +1,5 @@
 import prisma from "../lib/prisma.js";
+import { getIO } from "../socket/socket.js";
 
 const messageInclude = {
   sender: { select: { id: true, username: true, avatar: true } },
@@ -69,7 +70,7 @@ export const sendMessage = async (req, res, next) => {
   try {
     const senderId = req.user.id;
     const { userId: receiverId } = req.params;
-    const { content, fileUrl, fileType } = req.body;
+    const { content, fileUrl, fileType, replyTo } = req.body;
 
     if (!content && !fileUrl) {
       return res.status(400).json({ ok: false, message: "Message must have content or a file" });
@@ -94,6 +95,7 @@ export const sendMessage = async (req, res, next) => {
         content: content?.trim() || "",
         fileUrl: fileUrl || null,
         fileType: fileType || null,
+        replyTo: replyTo ? (typeof replyTo === "string" ? JSON.parse(replyTo) : replyTo) : undefined,
         sender: { connect: { id: senderId } },
         receiver: { connect: { id: receiverId } },
       },
@@ -156,4 +158,107 @@ export const getWorkspaceMembers = async (req, res, next) => {
   } catch (err) {
     next(err);
   }
+};
+// PATCH /api/dm/:messageId — edit DM
+export const editMessage = async (req, res, next) => {
+  try {
+    const { messageId } = req.params;
+    const { content }   = req.body;
+    const userId        = req.user.id;
+
+    const msg = await prisma.directMessage.findUnique({ where: { id: messageId } });
+    if (!msg) return res.status(404).json({ ok: false, message: "Мессеж олдсонгүй" });
+    if (msg.senderId !== userId) return res.status(403).json({ ok: false, message: "Зөвхөн өөрийн мессежийг засах боломжтой" });
+
+    const updated = await prisma.directMessage.update({
+      where: { id: messageId },
+      data: { content, edited: true },
+    });
+    // Emit reaction notification to message owner (if different from reactor)
+    if (msg.receiverId !== userId && msg.senderId !== userId) {
+      // skip - neither sender nor receiver
+    } else {
+      const ownerId = msg.senderId === userId ? msg.receiverId : msg.senderId;
+      if (ownerId && ownerId !== userId) {
+        try {
+          const io = getIO();
+          if (io) {
+            const sockets = [...io.sockets.sockets.values()];
+            const ownerSocket = sockets.find(s => s.user?.id === ownerId);
+            if (ownerSocket) {
+              ownerSocket.emit("reaction_notification", { reactorName: username, emoji, messageId });
+            }
+          }
+        } catch {}
+      }
+    }
+
+    res.json({ ok: true, data: updated });
+  } catch (err) { next(err); }
+};
+
+// PATCH /api/dm/:messageId/pin — pin/unpin DM
+export const pinMessage = async (req, res, next) => {
+  try {
+    const { messageId } = req.params;
+    const msg = await prisma.directMessage.findUnique({ where: { id: messageId } });
+    if (!msg) return res.status(404).json({ ok: false, message: "Мессеж олдсонгүй" });
+    const updated = await prisma.directMessage.update({
+      where: { id: messageId },
+      data: { pinned: !msg.pinned },
+    });
+    res.json({ ok: true, data: updated });
+  } catch (err) { next(err); }
+};
+
+// POST /api/dm/:messageId/react — toggle reaction on DM
+export const reactToMessage = async (req, res, next) => {
+  try {
+    const { messageId } = req.params;
+    const { emoji }     = req.body;
+    const userId        = req.user.id;
+    const username      = req.user.username;
+
+    if (!emoji) return res.status(400).json({ ok: false, message: "Emoji required" });
+
+    const msg = await prisma.directMessage.findUnique({ where: { id: messageId } });
+    if (!msg) return res.status(404).json({ ok: false, message: "Message not found" });
+
+    // reactions stored as JSON array: [{emoji, userId, username}]
+    const reactions = Array.isArray(msg.reactions) ? msg.reactions : [];
+    const idx = reactions.findIndex(r => r.emoji === emoji && r.userId === userId);
+
+    if (idx >= 0) {
+      reactions.splice(idx, 1); // remove
+    } else {
+      reactions.push({ emoji, userId, username }); // add
+    }
+
+    const updated = await prisma.directMessage.update({
+      where: { id: messageId },
+      data: { reactions },
+      include: { sender: { select: { id: true, username: true, avatar: true } } },
+    });
+
+    // Emit reaction notification to message owner (if different from reactor)
+    if (msg.receiverId !== userId && msg.senderId !== userId) {
+      // skip - neither sender nor receiver
+    } else {
+      const ownerId = msg.senderId === userId ? msg.receiverId : msg.senderId;
+      if (ownerId && ownerId !== userId) {
+        try {
+          const io = getIO();
+          if (io) {
+            const sockets = [...io.sockets.sockets.values()];
+            const ownerSocket = sockets.find(s => s.user?.id === ownerId);
+            if (ownerSocket) {
+              ownerSocket.emit("reaction_notification", { reactorName: username, emoji, messageId });
+            }
+          }
+        } catch {}
+      }
+    }
+
+    res.json({ ok: true, data: updated });
+  } catch (err) { next(err); }
 };

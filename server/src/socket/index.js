@@ -56,7 +56,12 @@ export const initSocket = (httpServer) => {
 
     // ── Channel Messages ─────────────────────────────────────────
     socket.on("send_message", (message) => {
+      // Emit to channel members (for real-time chat)
       io.to(`channel:${message.channelId}`).emit("new_message", message);
+      // Emit separate notification event to workspace (won't duplicate for channel members)
+      if (message.workspaceId) {
+        io.to(`workspace:${message.workspaceId}`).emit("channel_notification", message);
+      }
     });
     socket.on("delete_message", ({ messageId, channelId }) => {
       io.to(`channel:${channelId}`).emit("message_deleted", { messageId });
@@ -67,8 +72,13 @@ export const initSocket = (httpServer) => {
     socket.on("message_pinned", ({ message, channelId }) => {
       io.to(`channel:${channelId}`).emit("message_pinned", { message, channelId });
     });
-    socket.on("reaction_updated", ({ messageId, channelId, reactions }) => {
-      io.to(`channel:${channelId}`).emit("reaction_updated", { messageId, reactions });
+    socket.on("reaction_updated", ({ messageId, channelId, reactions, reactorId, reactorName, emoji, messageOwnerId }) => {
+      // Update UI for all channel members
+      io.to(`channel:${channelId}`).emit("reaction_updated", { messageId, reactions, reactorId, reactorName, emoji, messageOwnerId });
+      // Broadcast reaction notification to channel (frontend filters out own reactions)
+      if (reactorName && emoji) {
+        socket.to(`channel:${channelId}`).emit("reaction_notification", { reactorName, emoji, messageId, reactorId });
+      }
     });
 
     // ── Typing ───────────────────────────────────────────────────
@@ -136,9 +146,31 @@ export const initSocket = (httpServer) => {
       io.to(toSocketId).emit("dm_call_ice_candidate", { candidate, fromSocketId: socket.id });
     });
 
-    socket.on("dm_call_end", ({ toUserId }) => {
+    socket.on("dm_call_end", async ({ toUserId, duration, withVideo }) => {
       const target = findSocket(io, toUserId);
       if (target) target.emit("dm_call_ended", { fromUserId: userId });
+
+      // Emit call log event to both parties (UI handles display)
+      const mins = Math.floor((duration || 0) / 60);
+      const secs = (duration || 0) % 60;
+      const durationStr = duration > 0
+        ? `${mins > 0 ? mins + "м " : ""}${secs}с`
+        : null;
+      const callLog = {
+        type: "call_log",
+        withVideo: !!withVideo,
+        duration: durationStr,
+        callerId: userId,
+        calleeId: toUserId,
+        callerName: username,
+        time: new Date().toISOString(),
+        id: `call_${Date.now()}`,
+      };
+      // Delay slightly so DMPage has time to mount and register listener
+      setTimeout(() => {
+        socket.emit("dm_call_log", callLog);
+        if (target) target.emit("dm_call_log", callLog);
+      }, 1500);
     });
 
     // ── DM Messages ──────────────────────────────────────────────

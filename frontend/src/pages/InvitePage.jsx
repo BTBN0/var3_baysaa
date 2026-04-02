@@ -62,7 +62,7 @@ export default function InvitePage() {
 
   const hue = (workspace?.name?.charCodeAt(0) || 50) % 360;
   const avatarSrc = workspace?.avatar
-    ? ((import.meta.env.VITE_API_URL || "http://localhost:3001/api").replace("/api", "") + workspace.avatar)
+    ? ((import.meta.env.VITE_API_URL || "http://localhost:3000/api").replace("/api", "") + workspace.avatar)
     : null;
 
   return (

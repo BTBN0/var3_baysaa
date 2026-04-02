@@ -5,7 +5,7 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { useSocket } from "../context/SocketContext.jsx";
 import { useTheme } from "../context/ThemeContext.jsx";
 
-const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:3001/api").replace("/api", "");
+const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:3000/api").replace("/api", "");
 
 const Avatar = ({ user, size = 42 }) => {
   const grads = [
@@ -92,6 +92,14 @@ export default function FriendsPage() {
       setRequests(p => p.filter(r => r.id !== req.id));
       setFriends(p => [...p, req.sender]);
       socket?.emit("friend_request_accepted", { toUserId: req.senderId });
+    } catch (e) { console.error(e); }
+  };
+
+  const handleUnfriend = async (friendId) => {
+    if (!window.confirm("Найзаас хасах уу?")) return;
+    try {
+      await api.delete(`/friends/${friendId}`);
+      setFriends(p => p.filter(f => f.id !== friendId));
     } catch (e) { console.error(e); }
   };
 
@@ -264,19 +272,33 @@ export default function FriendsPage() {
                         {isOnline ? "● Online" : "○ Offline"}
                       </p>
                     </div>
-                    <button onClick={() => navigate(`/dm/${friend.id}`)} style={{
-                      display: "flex", alignItems: "center", gap: 6,
-                      padding: "7px 14px", borderRadius: 10,
-                      background: isDark ? "rgba(27,48,102,0.3)" : "rgba(27,48,102,0.08)",
-                      border: `1px solid ${P.bd2}`,
-                      color: P.text2, fontSize: 12, fontWeight: 600,
-                      cursor: "pointer", transition: "all .15s",
-                    }}
-                      onMouseEnter={e => { e.currentTarget.style.background = "#1B3066"; e.currentTarget.style.color = "#F0F0F5"; e.currentTarget.style.borderColor = "#2a4080"; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = isDark ? "rgba(27,48,102,0.3)" : "rgba(27,48,102,0.08)"; e.currentTarget.style.color = P.text2; e.currentTarget.style.borderColor = P.bd2; }}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-                      Мессеж
-                    </button>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <button onClick={() => navigate(`/dm/${friend.id}`)} style={{
+                        display: "flex", alignItems: "center", gap: 6,
+                        padding: "7px 14px", borderRadius: 10,
+                        background: isDark ? "rgba(27,48,102,0.3)" : "rgba(27,48,102,0.08)",
+                        border: `1px solid ${P.bd2}`,
+                        color: P.text2, fontSize: 12, fontWeight: 600,
+                        cursor: "pointer", transition: "all .15s",
+                      }}
+                        onMouseEnter={e => { e.currentTarget.style.background = "#1B3066"; e.currentTarget.style.color = "#F0F0F5"; e.currentTarget.style.borderColor = "#2a4080"; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = isDark ? "rgba(27,48,102,0.3)" : "rgba(27,48,102,0.08)"; e.currentTarget.style.color = P.text2; e.currentTarget.style.borderColor = P.bd2; }}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                        Мессеж
+                      </button>
+                      <button onClick={() => handleUnfriend(friend.id)} style={{
+                        padding: "7px 12px", borderRadius: 10,
+                        background: "transparent",
+                        border: "1px solid rgba(239,68,68,0.3)",
+                        color: "#f87171", fontSize: 12, fontWeight: 600,
+                        cursor: "pointer", transition: "all .15s",
+                      }}
+                        onMouseEnter={e => { e.currentTarget.style.background = "#dc2626"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "#dc2626"; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#f87171"; e.currentTarget.style.borderColor = "rgba(239,68,68,0.3)"; }}
+                        title="Найзаас хасах">
+                        ✕
+                      </button>
+                    </div>
                   </div>
                 );
               })}

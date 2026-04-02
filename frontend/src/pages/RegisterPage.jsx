@@ -34,9 +34,7 @@ const RegisterPage = () => {
     <div style={{ background: "var(--bg)", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 16px" }}>
       <div style={{ width: "100%", maxWidth: 380, background: "rgba(255,255,255,0.04)", backdropFilter: "blur(40px)", WebkitBackdropFilter: "blur(40px)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 18, overflow: "hidden", boxShadow: "0 32px 64px rgba(0,0,0,0.6)" }}>
         <div style={{ height: 40, background: "rgba(255,255,255,0.03)", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", padding: "0 14px", gap: 7 }}>
-          <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#ff5f56" }} />
-          <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#ffbd2e" }} />
-          <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#27c93f" }} />
+
           <span style={{ flex: 1, textAlign: "center", fontSize: 12, color: "var(--text5)", fontWeight: 500, marginRight: 52 }}>AuraSync</span>
         </div>
         <div style={{ padding: "28px 28px 24px" }}>

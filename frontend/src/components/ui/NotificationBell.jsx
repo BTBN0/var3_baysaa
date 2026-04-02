@@ -4,7 +4,7 @@ import { Bell, Check, Trash2, Phone, Video, MessageCircle, UserPlus, AtSign } fr
 import { useNotifications } from "../../context/NotificationContext.jsx";
 import { useTheme } from "../../context/ThemeContext.jsx";
 
-const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:3001/api").replace("/api", "");
+const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:3000/api").replace("/api", "");
 
 // Live updating time string
 const useTimeAgo = (date) => {
@@ -28,7 +28,9 @@ const useTimeAgo = (date) => {
 
 const TYPE_META = {
   dm:              { grad: "linear-gradient(135deg,#1B3066,#2a4080)", accent: "#2a4080",  Icon: MessageCircle, color: "#60a5fa" },
+  channel_message: { grad: "linear-gradient(135deg,#2a4080,#1B3066)", accent: "#1B3066",  Icon: MessageCircle, color: "#93c5fd" },
   mention:         { grad: "linear-gradient(135deg,#d97706,#b45309)", accent: "#f59e0b",  Icon: AtSign,        color: "#fbbf24" },
+  reaction:        { grad: "linear-gradient(135deg,#7c3aed,#5b21b6)", accent: "#8b5cf6",  Icon: Bell,          color: "#c4b5fd" },
   friend_request:  { grad: "linear-gradient(135deg,#6B7399,#1B3066)", accent: "#6B7399",  Icon: UserPlus,      color: "#a5b4fc" },
   friend_accepted: { grad: "linear-gradient(135deg,#16a34a,#15803d)", accent: "#22c55e",  Icon: Check,         color: "#4ade80" },
   call:            { grad: "linear-gradient(135deg,#22c55e,#16a34a)", accent: "#22c55e",  Icon: Phone,         color: "#4ade80" },

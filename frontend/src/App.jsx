@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { GoogleOAuthProvider } from "@react-oauth/google";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 import { ThemeProvider } from "./context/ThemeContext.jsx";
 import { SocketProvider } from "./context/SocketContext.jsx";
@@ -64,8 +63,7 @@ const AppRoutes = () => (
 );
 
 const App = () => (
-  <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+<BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <ThemeProvider>
         <AuthProvider>
           <SocketProvider>
@@ -81,7 +79,6 @@ const App = () => (
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>
-  </GoogleOAuthProvider>
 );
 
 export default App;

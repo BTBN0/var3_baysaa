@@ -8,9 +8,7 @@ export const NotificationProvider = ({ children }) => {
   const { socket } = useSocket();
   const { user }   = useAuth();
   const [items, setItems] = useState([]);
-
-  // Track pending calls — if dm_call_ended fires before answer → missed call
-  const pendingCalls = useRef({});  // fromUserId → callData
+  const pendingCalls = useRef({});
 
   const add = useCallback((n) => {
     setItems(p => [
@@ -27,32 +25,50 @@ export const NotificationProvider = ({ children }) => {
   useEffect(() => {
     if (!socket || !user) return;
 
-    // DM message — only when not on that DM page
+    // DM message
     const onDM = (msg) => {
       if (msg.senderId === user.id) return;
-      if (msg.isCallLog || msg.type === "call_log") return; // skip call logs
+      if (msg.isCallLog || msg.type === "call_log") return;
       if (window.location.pathname === `/dm/${msg.senderId}`) return;
       add({
         type: "dm",
         title: msg.sender?.username || "Шинэ мессеж",
-        message: msg.content
-          ? (msg.content.length > 60 ? msg.content.slice(0, 60) + "…" : msg.content)
-          : "📎 Файл",
+        message: msg.content ? (msg.content.length > 60 ? msg.content.slice(0, 60) + "…" : msg.content) : "📎 Файл",
         avatar: msg.sender?.avatar,
         link: `/dm/${msg.senderId}`,
       });
     };
 
-    // Channel mention
-    const onMsg = (msg) => {
+    // Channel notification — separate event for workspace-level (avoids duplicates)
+    const onChannelMsg = (msg) => {
       if (msg.user?.id === user.id) return;
-      if (!msg.content?.includes(`@${user.username}`)) return;
+      // Don't notify if currently on that channel
+      const path = window.location.pathname;
+      if (msg.channelId && path.includes(msg.channelId)) return;
+
+      const isMention = msg.content?.includes(`@${user.username}`);
       add({
-        type: "mention",
-        title: `${msg.user?.username} танд дурдсан`,
-        message: msg.content.length > 60 ? msg.content.slice(0, 60) + "…" : msg.content,
+        type: isMention ? "mention" : "channel_message",
+        title: isMention
+          ? `${msg.user?.username} танд дурдсан`
+          : `#${msg.channelName || "channel"} — ${msg.user?.username}`,
+        message: msg.content ? (msg.content.length > 60 ? msg.content.slice(0, 60) + "…" : msg.content) : "📎 Файл",
         avatar: msg.user?.avatar,
         link: msg.channelId ? `/chat/${msg.workspaceId}/${msg.channelId}` : null,
+      });
+    };
+
+    // Reaction notification — only when someone reacts to MY message
+    const onReaction = ({ messageId, reactions, reactorId, reactorName, emoji, messageOwnerId }) => {
+      if (!reactorId || reactorId === user.id) return;
+      if (!emoji || !reactorName) return;
+      // Only notify if the message belongs to current user
+      if (messageOwnerId && messageOwnerId !== user.id) return;
+      add({
+        type: "reaction",
+        title: `${reactorName} ${emoji} тавьсан`,
+        message: "Таны мессежид реакц нэмлээ",
+        link: null,
       });
     };
 
@@ -71,13 +87,10 @@ export const NotificationProvider = ({ children }) => {
       link: "/friends",
     });
 
-    // Incoming call — store as pending (NOT a notification yet)
     const onCallOffer = (data) => {
       pendingCalls.current[data.fromUserId] = data;
-      // Auto-expire after 35s if not answered or declined
       setTimeout(() => {
         if (pendingCalls.current[data.fromUserId]) {
-          // Missed call — add to bell notifications
           add({
             type: "missed_call",
             title: `${data.fromUsername} дуудсан — хариулаагүй`,
@@ -90,14 +103,11 @@ export const NotificationProvider = ({ children }) => {
       }, 35000);
     };
 
-    // Call ended by caller — missed call notification
     const onCallEnded = ({ fromUserId }) => {
       const pending = pendingCalls.current[fromUserId];
       if (pending) {
         delete pendingCalls.current[fromUserId];
-        // Only add missed call if we didn't answer (not on call page)
-        const onCallPage = window.location.pathname.startsWith("/call/");
-        if (!onCallPage) {
+        if (!window.location.pathname.startsWith("/call/")) {
           add({
             type: "missed_call",
             title: `${pending.fromUsername} дуудсан — хариулаагүй`,
@@ -109,8 +119,20 @@ export const NotificationProvider = ({ children }) => {
       }
     };
 
+    const onReactionDirect = ({ reactorName, emoji, reactorId }) => {
+      if (!reactorName || !emoji) return;
+      if (reactorId && reactorId === user.id) return;
+      add({
+        type: "reaction",
+        title: `${reactorName} ${emoji} тавьсан`,
+        message: "Реакц нэмлээ",
+        link: null,
+      });
+    };
+
     socket.on("dm_new_message",          onDM);
-    socket.on("new_message",             onMsg);
+    socket.on("channel_notification",     onChannelMsg);
+    socket.on("reaction_notification",   onReactionDirect);
     socket.on("friend_request_received", onFriendReq);
     socket.on("friend_accepted",         onFriendAcc);
     socket.on("dm_call_offer",           onCallOffer);
@@ -118,7 +140,8 @@ export const NotificationProvider = ({ children }) => {
 
     return () => {
       socket.off("dm_new_message",          onDM);
-      socket.off("new_message",             onMsg);
+      socket.off("channel_notification",     onChannelMsg);
+      socket.off("reaction_notification",   onReactionDirect);
       socket.off("friend_request_received", onFriendReq);
       socket.off("friend_accepted",         onFriendAcc);
       socket.off("dm_call_offer",           onCallOffer);

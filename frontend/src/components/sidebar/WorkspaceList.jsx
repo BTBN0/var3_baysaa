@@ -1,4 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
+import { imgUrl, API_BASE } from "../../utils/url.js";
 import { useEffect, useState } from "react";
 import api from "../../api/axios.js";
 
@@ -38,7 +39,7 @@ const WorkspaceList = ({ workspaces }) => {
             style={{ width: 36, height: 36, borderRadius: isActive ? 12 : 10, border: isActive ? "2px solid rgba(255,255,255,0.15)" : "2px solid transparent", background: "none", padding: 0, cursor: "pointer", transition: "all 0.2s", flexShrink: 0, position: "relative" }}
           >
             {ws.avatar ? (
-              <img src={ws.avatar} alt={ws.name} style={{ width: "100%", height: "100%", borderRadius: isActive ? 10 : 8, objectFit: "cover" }} />
+              <img src={imgUrl(ws.avatar)} alt={ws.name} style={{ width: "100%", height: "100%", borderRadius: isActive ? 10 : 8, objectFit: "cover" }} />
             ) : (
               <div style={{ width: "100%", height: "100%", borderRadius: isActive ? 10 : 8, background: gradient, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff" }}>
                 {ws.name?.[0]?.toUpperCase()}

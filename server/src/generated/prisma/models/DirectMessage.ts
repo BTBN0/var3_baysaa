@@ -30,6 +30,8 @@ export type DirectMessageMinAggregateOutputType = {
   fileUrl: string | null
   fileType: string | null
   deleted: boolean | null
+  edited: boolean | null
+  pinned: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
   senderId: string | null
@@ -42,6 +44,8 @@ export type DirectMessageMaxAggregateOutputType = {
   fileUrl: string | null
   fileType: string | null
   deleted: boolean | null
+  edited: boolean | null
+  pinned: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
   senderId: string | null
@@ -54,6 +58,10 @@ export type DirectMessageCountAggregateOutputType = {
   fileUrl: number
   fileType: number
   deleted: number
+  edited: number
+  pinned: number
+  replyTo: number
+  reactions: number
   createdAt: number
   updatedAt: number
   senderId: number
@@ -68,6 +76,8 @@ export type DirectMessageMinAggregateInputType = {
   fileUrl?: true
   fileType?: true
   deleted?: true
+  edited?: true
+  pinned?: true
   createdAt?: true
   updatedAt?: true
   senderId?: true
@@ -80,6 +90,8 @@ export type DirectMessageMaxAggregateInputType = {
   fileUrl?: true
   fileType?: true
   deleted?: true
+  edited?: true
+  pinned?: true
   createdAt?: true
   updatedAt?: true
   senderId?: true
@@ -92,6 +104,10 @@ export type DirectMessageCountAggregateInputType = {
   fileUrl?: true
   fileType?: true
   deleted?: true
+  edited?: true
+  pinned?: true
+  replyTo?: true
+  reactions?: true
   createdAt?: true
   updatedAt?: true
   senderId?: true
@@ -177,6 +193,10 @@ export type DirectMessageGroupByOutputType = {
   fileUrl: string | null
   fileType: string | null
   deleted: boolean
+  edited: boolean
+  pinned: boolean
+  replyTo: runtime.JsonValue | null
+  reactions: runtime.JsonValue | null
   createdAt: Date
   updatedAt: Date
   senderId: string
@@ -210,6 +230,10 @@ export type DirectMessageWhereInput = {
   fileUrl?: Prisma.StringNullableFilter<"DirectMessage"> | string | null
   fileType?: Prisma.StringNullableFilter<"DirectMessage"> | string | null
   deleted?: Prisma.BoolFilter<"DirectMessage"> | boolean
+  edited?: Prisma.BoolFilter<"DirectMessage"> | boolean
+  pinned?: Prisma.BoolFilter<"DirectMessage"> | boolean
+  replyTo?: Prisma.JsonNullableFilter<"DirectMessage">
+  reactions?: Prisma.JsonNullableFilter<"DirectMessage">
   createdAt?: Prisma.DateTimeFilter<"DirectMessage"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"DirectMessage"> | Date | string
   senderId?: Prisma.StringFilter<"DirectMessage"> | string
@@ -224,6 +248,10 @@ export type DirectMessageOrderByWithRelationInput = {
   fileUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   fileType?: Prisma.SortOrderInput | Prisma.SortOrder
   deleted?: Prisma.SortOrder
+  edited?: Prisma.SortOrder
+  pinned?: Prisma.SortOrder
+  replyTo?: Prisma.SortOrderInput | Prisma.SortOrder
+  reactions?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   senderId?: Prisma.SortOrder
@@ -242,6 +270,10 @@ export type DirectMessageWhereUniqueInput = Prisma.AtLeast<{
   fileUrl?: Prisma.StringNullableFilter<"DirectMessage"> | string | null
   fileType?: Prisma.StringNullableFilter<"DirectMessage"> | string | null
   deleted?: Prisma.BoolFilter<"DirectMessage"> | boolean
+  edited?: Prisma.BoolFilter<"DirectMessage"> | boolean
+  pinned?: Prisma.BoolFilter<"DirectMessage"> | boolean
+  replyTo?: Prisma.JsonNullableFilter<"DirectMessage">
+  reactions?: Prisma.JsonNullableFilter<"DirectMessage">
   createdAt?: Prisma.DateTimeFilter<"DirectMessage"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"DirectMessage"> | Date | string
   senderId?: Prisma.StringFilter<"DirectMessage"> | string
@@ -256,6 +288,10 @@ export type DirectMessageOrderByWithAggregationInput = {
   fileUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   fileType?: Prisma.SortOrderInput | Prisma.SortOrder
   deleted?: Prisma.SortOrder
+  edited?: Prisma.SortOrder
+  pinned?: Prisma.SortOrder
+  replyTo?: Prisma.SortOrderInput | Prisma.SortOrder
+  reactions?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   senderId?: Prisma.SortOrder
@@ -274,6 +310,10 @@ export type DirectMessageScalarWhereWithAggregatesInput = {
   fileUrl?: Prisma.StringNullableWithAggregatesFilter<"DirectMessage"> | string | null
   fileType?: Prisma.StringNullableWithAggregatesFilter<"DirectMessage"> | string | null
   deleted?: Prisma.BoolWithAggregatesFilter<"DirectMessage"> | boolean
+  edited?: Prisma.BoolWithAggregatesFilter<"DirectMessage"> | boolean
+  pinned?: Prisma.BoolWithAggregatesFilter<"DirectMessage"> | boolean
+  replyTo?: Prisma.JsonNullableWithAggregatesFilter<"DirectMessage">
+  reactions?: Prisma.JsonNullableWithAggregatesFilter<"DirectMessage">
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"DirectMessage"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"DirectMessage"> | Date | string
   senderId?: Prisma.StringWithAggregatesFilter<"DirectMessage"> | string
@@ -286,6 +326,10 @@ export type DirectMessageCreateInput = {
   fileUrl?: string | null
   fileType?: string | null
   deleted?: boolean
+  edited?: boolean
+  pinned?: boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  reactions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   sender: Prisma.UserCreateNestedOneWithoutSentMessagesInput
@@ -298,6 +342,10 @@ export type DirectMessageUncheckedCreateInput = {
   fileUrl?: string | null
   fileType?: string | null
   deleted?: boolean
+  edited?: boolean
+  pinned?: boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  reactions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   senderId: string
@@ -310,6 +358,10 @@ export type DirectMessageUpdateInput = {
   fileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fileType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  edited?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pinned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  reactions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sender?: Prisma.UserUpdateOneRequiredWithoutSentMessagesNestedInput
@@ -322,6 +374,10 @@ export type DirectMessageUncheckedUpdateInput = {
   fileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fileType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  edited?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pinned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  reactions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   senderId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -334,6 +390,10 @@ export type DirectMessageCreateManyInput = {
   fileUrl?: string | null
   fileType?: string | null
   deleted?: boolean
+  edited?: boolean
+  pinned?: boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  reactions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   senderId: string
@@ -346,6 +406,10 @@ export type DirectMessageUpdateManyMutationInput = {
   fileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fileType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  edited?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pinned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  reactions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -356,6 +420,10 @@ export type DirectMessageUncheckedUpdateManyInput = {
   fileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fileType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  edited?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pinned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  reactions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   senderId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -384,6 +452,10 @@ export type DirectMessageCountOrderByAggregateInput = {
   fileUrl?: Prisma.SortOrder
   fileType?: Prisma.SortOrder
   deleted?: Prisma.SortOrder
+  edited?: Prisma.SortOrder
+  pinned?: Prisma.SortOrder
+  replyTo?: Prisma.SortOrder
+  reactions?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   senderId?: Prisma.SortOrder
@@ -396,6 +468,8 @@ export type DirectMessageMaxOrderByAggregateInput = {
   fileUrl?: Prisma.SortOrder
   fileType?: Prisma.SortOrder
   deleted?: Prisma.SortOrder
+  edited?: Prisma.SortOrder
+  pinned?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   senderId?: Prisma.SortOrder
@@ -408,6 +482,8 @@ export type DirectMessageMinOrderByAggregateInput = {
   fileUrl?: Prisma.SortOrder
   fileType?: Prisma.SortOrder
   deleted?: Prisma.SortOrder
+  edited?: Prisma.SortOrder
+  pinned?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   senderId?: Prisma.SortOrder
@@ -504,6 +580,10 @@ export type DirectMessageCreateWithoutSenderInput = {
   fileUrl?: string | null
   fileType?: string | null
   deleted?: boolean
+  edited?: boolean
+  pinned?: boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  reactions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   receiver: Prisma.UserCreateNestedOneWithoutReceivedMessagesInput
@@ -515,6 +595,10 @@ export type DirectMessageUncheckedCreateWithoutSenderInput = {
   fileUrl?: string | null
   fileType?: string | null
   deleted?: boolean
+  edited?: boolean
+  pinned?: boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  reactions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   receiverId: string
@@ -536,6 +620,10 @@ export type DirectMessageCreateWithoutReceiverInput = {
   fileUrl?: string | null
   fileType?: string | null
   deleted?: boolean
+  edited?: boolean
+  pinned?: boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  reactions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   sender: Prisma.UserCreateNestedOneWithoutSentMessagesInput
@@ -547,6 +635,10 @@ export type DirectMessageUncheckedCreateWithoutReceiverInput = {
   fileUrl?: string | null
   fileType?: string | null
   deleted?: boolean
+  edited?: boolean
+  pinned?: boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  reactions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   senderId: string
@@ -587,6 +679,10 @@ export type DirectMessageScalarWhereInput = {
   fileUrl?: Prisma.StringNullableFilter<"DirectMessage"> | string | null
   fileType?: Prisma.StringNullableFilter<"DirectMessage"> | string | null
   deleted?: Prisma.BoolFilter<"DirectMessage"> | boolean
+  edited?: Prisma.BoolFilter<"DirectMessage"> | boolean
+  pinned?: Prisma.BoolFilter<"DirectMessage"> | boolean
+  replyTo?: Prisma.JsonNullableFilter<"DirectMessage">
+  reactions?: Prisma.JsonNullableFilter<"DirectMessage">
   createdAt?: Prisma.DateTimeFilter<"DirectMessage"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"DirectMessage"> | Date | string
   senderId?: Prisma.StringFilter<"DirectMessage"> | string
@@ -615,6 +711,10 @@ export type DirectMessageCreateManySenderInput = {
   fileUrl?: string | null
   fileType?: string | null
   deleted?: boolean
+  edited?: boolean
+  pinned?: boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  reactions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   receiverId: string
@@ -626,6 +726,10 @@ export type DirectMessageCreateManyReceiverInput = {
   fileUrl?: string | null
   fileType?: string | null
   deleted?: boolean
+  edited?: boolean
+  pinned?: boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  reactions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   senderId: string
@@ -637,6 +741,10 @@ export type DirectMessageUpdateWithoutSenderInput = {
   fileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fileType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  edited?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pinned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  reactions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   receiver?: Prisma.UserUpdateOneRequiredWithoutReceivedMessagesNestedInput
@@ -648,6 +756,10 @@ export type DirectMessageUncheckedUpdateWithoutSenderInput = {
   fileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fileType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  edited?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pinned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  reactions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   receiverId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -659,6 +771,10 @@ export type DirectMessageUncheckedUpdateManyWithoutSenderInput = {
   fileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fileType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  edited?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pinned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  reactions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   receiverId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -670,6 +786,10 @@ export type DirectMessageUpdateWithoutReceiverInput = {
   fileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fileType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  edited?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pinned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  reactions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sender?: Prisma.UserUpdateOneRequiredWithoutSentMessagesNestedInput
@@ -681,6 +801,10 @@ export type DirectMessageUncheckedUpdateWithoutReceiverInput = {
   fileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fileType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  edited?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pinned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  reactions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   senderId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -692,6 +816,10 @@ export type DirectMessageUncheckedUpdateManyWithoutReceiverInput = {
   fileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fileType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  edited?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pinned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  replyTo?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  reactions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   senderId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -705,6 +833,10 @@ export type DirectMessageSelect<ExtArgs extends runtime.Types.Extensions.Interna
   fileUrl?: boolean
   fileType?: boolean
   deleted?: boolean
+  edited?: boolean
+  pinned?: boolean
+  replyTo?: boolean
+  reactions?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   senderId?: boolean
@@ -721,13 +853,17 @@ export type DirectMessageSelectScalar = {
   fileUrl?: boolean
   fileType?: boolean
   deleted?: boolean
+  edited?: boolean
+  pinned?: boolean
+  replyTo?: boolean
+  reactions?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   senderId?: boolean
   receiverId?: boolean
 }
 
-export type DirectMessageOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "content" | "fileUrl" | "fileType" | "deleted" | "createdAt" | "updatedAt" | "senderId" | "receiverId", ExtArgs["result"]["directMessage"]>
+export type DirectMessageOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "content" | "fileUrl" | "fileType" | "deleted" | "edited" | "pinned" | "replyTo" | "reactions" | "createdAt" | "updatedAt" | "senderId" | "receiverId", ExtArgs["result"]["directMessage"]>
 export type DirectMessageInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   sender?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   receiver?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -745,6 +881,10 @@ export type $DirectMessagePayload<ExtArgs extends runtime.Types.Extensions.Inter
     fileUrl: string | null
     fileType: string | null
     deleted: boolean
+    edited: boolean
+    pinned: boolean
+    replyTo: runtime.JsonValue | null
+    reactions: runtime.JsonValue | null
     createdAt: Date
     updatedAt: Date
     senderId: string
@@ -1125,6 +1265,10 @@ export interface DirectMessageFieldRefs {
   readonly fileUrl: Prisma.FieldRef<"DirectMessage", 'String'>
   readonly fileType: Prisma.FieldRef<"DirectMessage", 'String'>
   readonly deleted: Prisma.FieldRef<"DirectMessage", 'Boolean'>
+  readonly edited: Prisma.FieldRef<"DirectMessage", 'Boolean'>
+  readonly pinned: Prisma.FieldRef<"DirectMessage", 'Boolean'>
+  readonly replyTo: Prisma.FieldRef<"DirectMessage", 'Json'>
+  readonly reactions: Prisma.FieldRef<"DirectMessage", 'Json'>
   readonly createdAt: Prisma.FieldRef<"DirectMessage", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"DirectMessage", 'DateTime'>
   readonly senderId: Prisma.FieldRef<"DirectMessage", 'String'>

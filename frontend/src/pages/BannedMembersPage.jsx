@@ -11,7 +11,7 @@ const Avatar = ({ user, size = 40 }) => {
     "linear-gradient(135deg,#080B2A,#1B3066)",
   ];
   const g = grads[(user?.username?.charCodeAt(0) || 0) % grads.length];
-  const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:3001/api").replace("/api", "");
+  const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:3000/api").replace("/api", "");
   const src = user?.avatar ? (user.avatar.startsWith("http") ? user.avatar : API_BASE + user.avatar) : null;
   if (src) return <img src={src} alt={user.username} style={{ width: size, height: size, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />;
   return (

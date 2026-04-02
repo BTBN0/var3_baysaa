@@ -159,9 +159,7 @@ const LandingPage = () => {
           <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16, overflow: "hidden", textAlign: "left", opacity: visible ? 1 : 0, transform: visible ? "translateY(0) scale(1)" : "translateY(40px) scale(0.96)", transition: "all 0.7s ease 0.5s", boxShadow: "0 32px 80px rgba(0,0,0,0.5)" }}>
             {/* Mock title bar */}
             <div style={{ height: 38, background: "var(--surface)", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", padding: "0 14px", gap: 7 }}>
-              <div style={{ width: 11, height: 11, borderRadius: "50%", background: "#ff5f56" }} />
-              <div style={{ width: 11, height: 11, borderRadius: "50%", background: "#ffbd2e" }} />
-              <div style={{ width: 11, height: 11, borderRadius: "50%", background: "#27c93f" }} />
+
               <span style={{ flex: 1, textAlign: "center", fontSize: 11, color: "var(--text5)", marginRight: 46 }}># general</span>
             </div>
             {/* Mock messages */}

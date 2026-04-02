@@ -15,6 +15,7 @@ import dmRoutes from "./routes/dm.routes.js";
 import friendRoutes from "./routes/friend.routes.js";
 import blockRoutes from "./routes/block.routes.js";
 import banRoutes from "./routes/ban.routes.js";
+import roleRoutes from "./routes/role.routes.js";
 import threadRoutes from "./routes/thread.routes.js";
 
 import { errorHandler } from "./middleware/errorHandler.js";
@@ -67,6 +68,8 @@ app.use("/api/dm", dmRoutes);
 app.use("/api/friends", friendRoutes);
 app.use("/api/blocks", blockRoutes);
 app.use("/api/bans", banRoutes);
+app.use("/api/roles", roleRoutes);
+app.use("/api/workspaces/:workspaceId/roles", roleRoutes);
 app.use("/api/threads", threadRoutes);
 
 // ── Error handlers ───────────────────────────────────────────────

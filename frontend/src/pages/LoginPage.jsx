@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { GoogleLogin } from "@react-oauth/google";
 import { useAuth } from "../context/AuthContext.jsx";
+import Logo from "../components/ui/Logo.jsx";
 import { useTheme } from "../context/ThemeContext.jsx";
 import { useCursor } from "../hooks/useCursor.js";
 import api from "../api/axios.js";
@@ -102,41 +102,35 @@ const LoginPage = () => {
 
         {/* Left — branding */}
         <div style={{
-          flex:1, display:"flex", flexDirection:"column", justifyContent:"space-between",
+          flex:1, display:"flex", flexDirection:"column",
+          justifyContent:"space-between",
           padding:48, position:"relative", overflow:"hidden",
           background:"linear-gradient(145deg,#080B2A 0%,#0D1240 45%,#0a1a50 100%)",
         }}>
+          {/* Bg glow */}
           <div style={{position:"absolute",inset:0,pointerEvents:"none"}}>
-            <div style={{position:"absolute",top:"10%",left:"15%",width:340,height:340,borderRadius:"50%",background:"radial-gradient(circle,rgba(27,48,102,0.6) 0%,transparent 70%)"}}/>
-            <div style={{position:"absolute",bottom:"15%",right:"5%",width:260,height:260,borderRadius:"50%",background:"radial-gradient(circle,rgba(107,115,153,0.2) 0%,transparent 70%)"}}/>
+            <div style={{position:"absolute",top:"10%",left:"15%",width:320,height:320,borderRadius:"50%",background:"radial-gradient(circle,rgba(27,48,102,0.55) 0%,transparent 70%)"}}/>
+            <div style={{position:"absolute",bottom:"15%",right:"5%",width:220,height:220,borderRadius:"50%",background:"radial-gradient(circle,rgba(107,115,153,0.18) 0%,transparent 70%)"}}/>
           </div>
 
-          <div style={{position:"relative",zIndex:1}}>
-            <div style={{width:56,height:56,borderRadius:14,marginBottom:24,display:"flex",alignItems:"center",justifyContent:"center",
-              background:"linear-gradient(135deg,#1B3066,#2a4080,#6B7399)",
-              boxShadow:"0 4px 20px rgba(27,48,102,0.5)"}}>
-              <svg viewBox="0 0 56 56" width="56" height="56" fill="none">
-                <circle cx="28" cy="28" r="11" fill="rgba(240,240,245,0.2)"/>
-                <circle cx="28" cy="28" r="5.5" fill="rgba(240,240,245,0.92)"/>
-                <circle cx="28" cy="13" r="3" fill="rgba(240,240,245,0.5)"/>
-                <circle cx="28" cy="43" r="3" fill="rgba(240,240,245,0.5)"/>
-                <circle cx="13" cy="28" r="3" fill="rgba(240,240,245,0.5)"/>
-                <circle cx="43" cy="28" r="3" fill="rgba(240,240,245,0.5)"/>
-                <circle cx="17.5" cy="17.5" r="2" fill="rgba(240,240,245,0.3)"/>
-                <circle cx="38.5" cy="38.5" r="2" fill="rgba(240,240,245,0.3)"/>
-                <circle cx="38.5" cy="17.5" r="2" fill="rgba(240,240,245,0.3)"/>
-                <circle cx="17.5" cy="38.5" r="2" fill="rgba(240,240,245,0.3)"/>
-              </svg>
+          {/* Center: icon + big AURA */}
+          <div style={{position:"relative",zIndex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:10,flex:1,justifyContent:"center"}}>
+            <div style={{
+              width:110, height:110, borderRadius:28,
+              background:"linear-gradient(145deg,#1e3d8a,#1a3578)",
+              display:"flex", alignItems:"center", justifyContent:"center",
+              boxShadow:"0 8px 32px rgba(10,20,80,0.6), inset 0 1px 0 rgba(100,160,255,0.15)",
+            }}>
+              <Logo size={74} showText={false} />
             </div>
-            <h1 style={{fontFamily:"'Syne',sans-serif",fontSize:48,fontWeight:900,letterSpacing:"0.22em",lineHeight:1,color:"#F0F0F5",marginBottom:4}}>
-              AURA
-            </h1>
-            <p style={{fontSize:13,color:"#6B7399"}}>Таны дотоод харилцааны орон зай</p>
+            <div style={{textAlign:"center",lineHeight:1}}>
+              <div style={{fontSize:40,fontWeight:900,color:"#ffffff",letterSpacing:"0.18em",fontFamily:"system-ui,-apple-system,sans-serif"}}>AURA SYNC</div>
+            </div>
           </div>
 
+          {/* Bottom: chat animation */}
           <div style={{position:"relative",zIndex:1,animation:"fadeUp .4s ease .5s both"}}>
-            <div style={{position:"relative",display:"flex",alignItems:"flex-end",justifyContent:"center",gap:24,marginBottom:16,height:120}}>
-
+            <div style={{display:"flex",alignItems:"flex-end",justifyContent:"center",gap:24,marginBottom:16,height:120}}>
               {/* User A */}
               <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
                 <div style={{position:"relative"}}>
@@ -147,20 +141,14 @@ const LoginPage = () => {
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(240,240,245,0.4)" strokeWidth="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
                 </div>
               </div>
-
               {/* Messages */}
               <div style={{display:"flex",flexDirection:"column",gap:8,flex:1,maxWidth:140}}>
-                <div style={{alignSelf:"flex-start",padding:"6px 12px",borderRadius:"12px 12px 12px 2px",fontSize:12,
-                  background:"rgba(27,48,102,0.6)",color:"#F0F0F5",border:"1px solid rgba(107,115,153,0.3)",
-                  animation:"fadeUp .4s ease .7s both"}}>Сайн байна уу! 👋</div>
-                <div style={{alignSelf:"flex-end",padding:"6px 12px",borderRadius:"12px 12px 2px 12px",fontSize:12,
-                  background:"rgba(107,115,153,0.25)",color:"#F0F0F5",border:"1px solid rgba(107,115,153,0.2)",
-                  animation:"fadeUp .4s ease .9s both"}}>Сайн! Та яаж байна? 😊</div>
+                <div style={{alignSelf:"flex-start",padding:"6px 12px",borderRadius:"12px 12px 12px 2px",fontSize:12,background:"rgba(27,48,102,0.6)",color:"#F0F0F5",border:"1px solid rgba(107,115,153,0.3)",animation:"fadeUp .4s ease .7s both"}}>Сайн байна уу! 👋</div>
+                <div style={{alignSelf:"flex-end",padding:"6px 12px",borderRadius:"12px 12px 2px 12px",fontSize:12,background:"rgba(107,115,153,0.25)",color:"#F0F0F5",border:"1px solid rgba(107,115,153,0.2)",animation:"fadeUp .4s ease .9s both"}}>Сайн! Та яаж байна? 😊</div>
                 <div style={{display:"flex",gap:4,paddingLeft:8,animation:"fadeUp .4s ease 1.1s both"}}>
                   {[0,1,2].map(i=><span key={i} style={{width:6,height:6,borderRadius:"50%",background:"#6B7399",animation:`bounce 1s ${i*0.15}s infinite`}}/>)}
                 </div>
               </div>
-
               {/* User B */}
               <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
                 <div style={{position:"relative"}}>
@@ -173,7 +161,7 @@ const LoginPage = () => {
               </div>
             </div>
             <p style={{textAlign:"center",fontSize:12,color:"rgba(107,115,153,0.5)"}}>
-              AURA — Хаана ч, хэзээ ч холбогдоорой
+              AURA-SYNC — Хаана ч, хэзээ ч холбогдоорой
             </p>
           </div>
         </div>
@@ -187,12 +175,7 @@ const LoginPage = () => {
         }}>
           <div style={{width:"100%"}}>
 
-            {/* macOS dots */}
-            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:32}}>
-              <div style={{width:12,height:12,borderRadius:"50%",background:"#ff5f56"}}/>
-              <div style={{width:12,height:12,borderRadius:"50%",background:"#ffbd2e"}}/>
-              <div style={{width:12,height:12,borderRadius:"50%",background:"#27c93f"}}/>
-            </div>
+
 
             <div style={{marginBottom:28}}>
               <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:24,fontWeight:700,letterSpacing:"-0.02em",color:P.text,marginBottom:4}}>
@@ -214,88 +197,13 @@ const LoginPage = () => {
               </div>
             ) : (
               <div style={{marginBottom:20}}>
-                <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={() => setError("Google нэвтрэлт амжилтгүй")}
-                  width={320}
-                  theme={isDark ? "filled_black" : "outline"}
-                  size="large"
-                  text="continue_with"
-                  shape="rectangular"
-                />
+                <GoogleAuthButton onSuccess={handleGoogleSuccess} onError={() => setError("Google нэвтрэлт амжилтгүй")} isDark={isDark} />
               </div>
             )}
 
-            {/* Divider */}
-            <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:20}}>
-              <div style={{flex:1,height:1,background:P.border}}/>
-              <span style={{fontSize:11,color:P.muted}}>эсвэл имэйлээр</span>
-              <div style={{flex:1,height:1,background:P.border}}/>
-            </div>
 
-            {/* Email form */}
-            <form onSubmit={handleSubmit} style={{display:"flex",flexDirection:"column",gap:14}}>
-              <div>
-                <label style={{display:"block",fontSize:11,fontWeight:600,letterSpacing:"0.06em",textTransform:"uppercase",color:P.muted,marginBottom:6}}>
-                  Имэйл
-                </label>
-                <div style={{position:"relative"}}>
-                  <svg style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:P.muted}} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                    <polyline points="22,6 12,13 2,6"/>
-                  </svg>
-                  <input type="email" placeholder="name@example.com"
-                    value={email}
-                    onChange={e=>{setEmail(e.target.value);setError("");setSuccess("");}}
-                    autoComplete="email"
-                    style={{
-                      width:"100%", padding:"10px 12px 10px 36px",
-                      borderRadius:10, border:`1px solid ${P.border2}`,
-                      background:isDark?"#111540":"#F0F0F5",
-                      color:P.text, fontSize:14, outline:"none", boxSizing:"border-box",
-                      transition:"border-color .15s, box-shadow .15s", cursor:"none",
-                    }}
-                    onFocus={e=>{e.target.style.borderColor="#6B7399";e.target.style.boxShadow="0 0 0 3px rgba(107,115,153,0.2)";}}
-                    onBlur={e=>{e.target.style.borderColor=P.border2;e.target.style.boxShadow="none";}}
-                  />
-                </div>
-              </div>
 
-              {error && (
-                <div style={{display:"flex",alignItems:"center",gap:8,padding:"10px 12px",borderRadius:10,
-                  background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.25)",
-                  color:"#f87171",fontSize:13,animation:"slideDown .2s ease both"}}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                  {error}
-                </div>
-              )}
-              {success && (
-                <div style={{display:"flex",alignItems:"center",gap:8,padding:"10px 12px",borderRadius:10,
-                  background:"rgba(34,197,94,0.08)",border:"1px solid rgba(34,197,94,0.25)",
-                  color:"#4ade80",fontSize:13,animation:"slideDown .2s ease both"}}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>
-                  {success}
-                </div>
-              )}
-
-              <button type="submit" disabled={loading} style={{
-                display:"flex", alignItems:"center", justifyContent:"center", gap:8,
-                padding:"12px 20px", borderRadius:10, border:"none",
-                background:"linear-gradient(135deg,#1B3066,#2a4080)",
-                color:"#F0F0F5", fontSize:14, fontWeight:600,
-                cursor:loading?"not-allowed":"none", opacity:loading?0.5:1,
-                transition:"all .2s",
-                boxShadow:"0 4px 16px rgba(27,48,102,0.4)",
-              }}
-                onMouseEnter={e=>{if(!loading){e.currentTarget.style.background="linear-gradient(135deg,#2a4080,#6B7399)";e.currentTarget.style.boxShadow="0 6px 20px rgba(107,115,153,0.4)";e.currentTarget.style.transform="translateY(-1px)";}}}
-                onMouseLeave={e=>{e.currentTarget.style.background="linear-gradient(135deg,#1B3066,#2a4080)";e.currentTarget.style.boxShadow="0 4px 16px rgba(27,48,102,0.4)";e.currentTarget.style.transform="none";}}
-              >
-                {loading
-                  ? <><svg style={{animation:"spinSlow 1.2s linear infinite"}} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" strokeOpacity="0.3"/><path d="M12 2a10 10 0 0110 10"/></svg>Түр хүлээнэ үү…</>
-                  : <>Нэвтрэх <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></>
-                }
-              </button>
-            </form>
+            
           </div>
         </div>
       </div>
@@ -304,5 +212,61 @@ const LoginPage = () => {
     </div>
   );
 };
+
+
+// ── Custom Google Auth Button ─────────────────────────────────────────────
+const initDone = { current: false };  // module-level flag, not per-component
+
+function GoogleAuthButton({ onSuccess, onError, isDark }) {
+  const divRef    = useRef(null);
+  const clientId  = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+  const render = () => {
+    if (!window.google?.accounts?.id || !divRef.current || !clientId) return;
+    if (!initDone.current) {
+      initDone.current = true;
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: onSuccess,
+        ux_mode: "popup",
+      });
+    }
+    try {
+      window.google.accounts.id.renderButton(divRef.current, {
+        type: "standard",
+        theme: isDark ? "filled_black" : "outline",
+        size: "large",
+        text: "continue_with",
+        shape: "rectangular",
+        width: 320,
+      });
+    } catch (e) { console.warn("[Google]", e.message); }
+  };
+
+  useEffect(() => {
+    if (window.google?.accounts?.id) {
+      render();
+      return;
+    }
+    // Load script once
+    if (!document.getElementById("gsi-script")) {
+      const s = document.createElement("script");
+      s.id    = "gsi-script";
+      s.src   = "https://accounts.google.com/gsi/client";
+      s.async = true;
+      s.defer = true;
+      s.onload = render;
+      document.head.appendChild(s);
+    } else {
+      // Script tag exists but google not ready yet
+      const check = setInterval(() => {
+        if (window.google?.accounts?.id) { clearInterval(check); render(); }
+      }, 100);
+      return () => clearInterval(check);
+    }
+  }, [isDark]);
+
+  return <div ref={divRef} style={{ minHeight: 44, display: "flex", justifyContent: "center" }} />;
+}
 
 export default LoginPage;

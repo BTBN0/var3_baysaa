@@ -387,6 +387,7 @@ export const ModelName = {
   User: 'User',
   Workspace: 'Workspace',
   WorkspaceMember: 'WorkspaceMember',
+  WorkspaceRole: 'WorkspaceRole',
   Channel: 'Channel',
   Message: 'Message',
   Reaction: 'Reaction',
@@ -411,7 +412,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "workspace" | "workspaceMember" | "channel" | "message" | "reaction" | "directMessage" | "friendRequest" | "block" | "workspaceBan" | "thread" | "reply"
+    modelProps: "user" | "workspace" | "workspaceMember" | "workspaceRole" | "channel" | "message" | "reaction" | "directMessage" | "friendRequest" | "block" | "workspaceBan" | "thread" | "reply"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -610,6 +611,72 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.WorkspaceMemberCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.WorkspaceMemberCountAggregateOutputType> | number
+        }
+      }
+    }
+    WorkspaceRole: {
+      payload: Prisma.$WorkspaceRolePayload<ExtArgs>
+      fields: Prisma.WorkspaceRoleFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.WorkspaceRoleFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkspaceRolePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.WorkspaceRoleFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkspaceRolePayload>
+        }
+        findFirst: {
+          args: Prisma.WorkspaceRoleFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkspaceRolePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.WorkspaceRoleFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkspaceRolePayload>
+        }
+        findMany: {
+          args: Prisma.WorkspaceRoleFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkspaceRolePayload>[]
+        }
+        create: {
+          args: Prisma.WorkspaceRoleCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkspaceRolePayload>
+        }
+        createMany: {
+          args: Prisma.WorkspaceRoleCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        delete: {
+          args: Prisma.WorkspaceRoleDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkspaceRolePayload>
+        }
+        update: {
+          args: Prisma.WorkspaceRoleUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkspaceRolePayload>
+        }
+        deleteMany: {
+          args: Prisma.WorkspaceRoleDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.WorkspaceRoleUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        upsert: {
+          args: Prisma.WorkspaceRoleUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkspaceRolePayload>
+        }
+        aggregate: {
+          args: Prisma.WorkspaceRoleAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateWorkspaceRole>
+        }
+        groupBy: {
+          args: Prisma.WorkspaceRoleGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WorkspaceRoleGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.WorkspaceRoleCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WorkspaceRoleCountAggregateOutputType> | number
         }
       }
     }
@@ -1278,12 +1345,25 @@ export type WorkspaceScalarFieldEnum = (typeof WorkspaceScalarFieldEnum)[keyof t
 export const WorkspaceMemberScalarFieldEnum = {
   id: 'id',
   role: 'role',
+  roleId: 'roleId',
   joinedAt: 'joinedAt',
   userId: 'userId',
   workspaceId: 'workspaceId'
 } as const
 
 export type WorkspaceMemberScalarFieldEnum = (typeof WorkspaceMemberScalarFieldEnum)[keyof typeof WorkspaceMemberScalarFieldEnum]
+
+
+export const WorkspaceRoleScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  color: 'color',
+  position: 'position',
+  createdAt: 'createdAt',
+  workspaceId: 'workspaceId'
+} as const
+
+export type WorkspaceRoleScalarFieldEnum = (typeof WorkspaceRoleScalarFieldEnum)[keyof typeof WorkspaceRoleScalarFieldEnum]
 
 
 export const ChannelScalarFieldEnum = {
@@ -1332,6 +1412,10 @@ export const DirectMessageScalarFieldEnum = {
   fileUrl: 'fileUrl',
   fileType: 'fileType',
   deleted: 'deleted',
+  edited: 'edited',
+  pinned: 'pinned',
+  replyTo: 'replyTo',
+  reactions: 'reactions',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   senderId: 'senderId',
@@ -1447,11 +1531,22 @@ export type WorkspaceOrderByRelevanceFieldEnum = (typeof WorkspaceOrderByRelevan
 export const WorkspaceMemberOrderByRelevanceFieldEnum = {
   id: 'id',
   role: 'role',
+  roleId: 'roleId',
   userId: 'userId',
   workspaceId: 'workspaceId'
 } as const
 
 export type WorkspaceMemberOrderByRelevanceFieldEnum = (typeof WorkspaceMemberOrderByRelevanceFieldEnum)[keyof typeof WorkspaceMemberOrderByRelevanceFieldEnum]
+
+
+export const WorkspaceRoleOrderByRelevanceFieldEnum = {
+  id: 'id',
+  name: 'name',
+  color: 'color',
+  workspaceId: 'workspaceId'
+} as const
+
+export type WorkspaceRoleOrderByRelevanceFieldEnum = (typeof WorkspaceRoleOrderByRelevanceFieldEnum)[keyof typeof WorkspaceRoleOrderByRelevanceFieldEnum]
 
 
 export const ChannelOrderByRelevanceFieldEnum = {
@@ -1585,6 +1680,13 @@ export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel
 
 
 /**
+ * Reference to a field of type 'Int'
+ */
+export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
+    
+
+
+/**
  * Reference to a field of type 'Boolean'
  */
 export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
@@ -1606,9 +1708,9 @@ export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$Prisma
 
 
 /**
- * Reference to a field of type 'Int'
+ * Reference to a field of type 'Float'
  */
-export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
+export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
     
 
 /**
@@ -1709,6 +1811,7 @@ export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
   workspace?: Prisma.WorkspaceOmit
   workspaceMember?: Prisma.WorkspaceMemberOmit
+  workspaceRole?: Prisma.WorkspaceRoleOmit
   channel?: Prisma.ChannelOmit
   message?: Prisma.MessageOmit
   reaction?: Prisma.ReactionOmit

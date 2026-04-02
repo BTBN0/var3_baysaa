@@ -57,6 +57,11 @@ export type Workspace = Prisma.WorkspaceModel
  */
 export type WorkspaceMember = Prisma.WorkspaceMemberModel
 /**
+ * Model WorkspaceRole
+ * 
+ */
+export type WorkspaceRole = Prisma.WorkspaceRoleModel
+/**
  * Model Channel
  * 
  */

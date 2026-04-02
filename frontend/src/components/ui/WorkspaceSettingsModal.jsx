@@ -1,12 +1,16 @@
-import { useState, useRef } from "react";
-import { X, Camera, Check, Copy, Link, UserPlus, Search, Loader } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { X, Camera, Check, Copy, Link, UserPlus, Search, Loader, AlertTriangle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext.jsx";
 import api from "../../api/axios.js";
 import { useTheme } from "../../context/ThemeContext.jsx";
 
-const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:3001/api").replace("/api", "");
+const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:3000/api").replace("/api", "");
 
 export default function WorkspaceSettingsModal({ workspace, workspaceId, onClose }) {
   const { theme } = useTheme();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const isDark    = theme === "dark";
 
   const [tab, setTab]               = useState("general"); // "general" | "invite"
@@ -29,6 +33,15 @@ export default function WorkspaceSettingsModal({ workspace, workspaceId, onClose
   const [inviteResult,   setInviteResult]   = useState(null); // { ok, message, user }
   const [invitedUsers,   setInvitedUsers]   = useState([]);
 
+  const [myRole,     setMyRole]     = useState("MEMBER");
+  const [roles,      setRoles]      = useState([]);
+  const [newRoleName, setNewRoleName] = useState("");
+  const [newRoleColor, setNewRoleColor] = useState("#6B7399");
+  const [editingRole, setEditingRole] = useState(null);
+  const [members,    setMembers]     = useState([]); // {id, name, color}
+  const [deleting,   setDeleting]   = useState(false);
+  const [leaving,    setLeaving]    = useState(false);
+
   const fileRef = useRef(null);
 
   const P = {
@@ -42,6 +55,27 @@ export default function WorkspaceSettingsModal({ workspace, workspaceId, onClose
     inputBg: isDark ? "#080B2A"  : "#F0F0F5",
     shadow:  isDark ? "0 24px 60px rgba(8,11,42,0.8)" : "0 8px 40px rgba(8,11,42,0.15)",
   };
+
+  // Load current user's role using useAuth user.id
+  useEffect(() => {
+    const wsId = workspaceId || workspace?.id;
+    if (!wsId || !user?.id) return;
+    api.get(`/workspaces/${wsId}/members`)
+      .then(res => {
+        const allMembers = res.data.data || [];
+        const me = allMembers.find(m => m.id === user.id);
+        setMyRole(me?.role || "MEMBER");
+        setMembers(allMembers);
+      })
+      .catch(() => setMyRole("MEMBER"));
+  }, [workspaceId, workspace?.id, user?.id]);
+
+  // Load roles
+  useEffect(() => {
+    const wsId = workspaceId || workspace?.id;
+    if (!wsId) return;
+    api.get(`/workspaces/${wsId}/roles`).then(r => setRoles(r.data.data || [])).catch(() => {});
+  }, [workspaceId, workspace?.id, tab]);
 
   const hue  = (workspace?.name?.charCodeAt(0) || 0) % 360;
   const grad = `linear-gradient(135deg,hsl(${hue},45%,25%),hsl(${hue+30},45%,18%))`;
@@ -64,12 +98,12 @@ export default function WorkspaceSettingsModal({ workspace, workspaceId, onClose
       if (avatarFile) {
         const form = new FormData();
         form.append("avatar", avatarFile);
-        await api.patch(`/workspaces/${workspaceId}/avatar`, form, {
+        await api.patch(`/workspaces/${workspaceId || workspace?.id}/avatar`, form, {
           headers: { "Content-Type": "multipart/form-data" },
         });
       }
       if (name.trim() !== workspace?.name || description !== workspace?.description) {
-        await api.patch(`/workspaces/${workspaceId}`, {
+        await api.patch(`/workspaces/${workspaceId || workspace?.id}`, {
           name: name.trim(), description: description.trim(),
         });
       }
@@ -86,7 +120,7 @@ export default function WorkspaceSettingsModal({ workspace, workspaceId, onClose
     if (!inviteUsername.trim()) return;
     setInviting(true); setInviteResult(null);
     try {
-      const res = await api.post(`/workspaces/${workspaceId}/invite-user`, {
+      const res = await api.post(`/workspaces/${workspaceId || workspace?.id}/invite-user`, {
         username: inviteUsername.trim(),
       });
       setInviteResult({ ok: true, message: res.data.message, user: res.data.data });
@@ -106,6 +140,8 @@ export default function WorkspaceSettingsModal({ workspace, workspaceId, onClose
   const TABS = [
     { id: "general", label: "Тохиргоо" },
     { id: "invite",  label: "Урилга" },
+    { id: "roles",   label: "Roles" },
+    { id: "members", label: "Members" },
   ];
 
   return (
@@ -209,11 +245,27 @@ export default function WorkspaceSettingsModal({ workspace, workspaceId, onClose
               <p style={{ fontSize: 11, color: P.muted, marginTop: 5 }}>Энэ холбоосыг хуваалцсанаар хэн ч workspace-д нэгдэх боломжтой.</p>
             </div>
 
-            <button type="submit" disabled={saving} style={{ padding: "11px", borderRadius: 10, border: saved ? "1px solid rgba(34,197,94,.3)" : "none", background: saved ? "rgba(34,197,94,.15)" : "linear-gradient(135deg,#1B3066,#2a4080)", color: saved ? "#4ade80" : "#F0F0F5", fontSize: 13, fontWeight: 600, cursor: saving ? "not-allowed" : "pointer", opacity: saving ? .6 : 1, transition: "all .2s", boxShadow: saved ? "none" : "0 4px 14px rgba(27,48,102,.4)", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
-              onMouseEnter={e => { if (!saving && !saved) { e.currentTarget.style.background = "linear-gradient(135deg,#2a4080,#6B7399)"; } }}
-              onMouseLeave={e => { if (!saving && !saved) { e.currentTarget.style.background = "linear-gradient(135deg,#1B3066,#2a4080)"; } }}>
-              {saved ? <><Check size={14} /> Хадгаллаа!</> : saving ? "Хадгалж байна…" : "Хадгалах"}
-            </button>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button type="submit" disabled={saving} style={{ flex: 1, padding: "11px", borderRadius: 10, border: saved ? "1px solid rgba(34,197,94,.3)" : "none", background: saved ? "rgba(34,197,94,.15)" : "linear-gradient(135deg,#1B3066,#2a4080)", color: saved ? "#4ade80" : "#F0F0F5", fontSize: 13, fontWeight: 600, cursor: saving ? "not-allowed" : "pointer", opacity: saving ? .6 : 1, transition: "all .2s", boxShadow: saved ? "none" : "0 4px 14px rgba(27,48,102,.4)", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+                onMouseEnter={e => { if (!saving && !saved) { e.currentTarget.style.background = "linear-gradient(135deg,#2a4080,#6B7399)"; } }}
+                onMouseLeave={e => { if (!saving && !saved) { e.currentTarget.style.background = "linear-gradient(135deg,#1B3066,#2a4080)"; } }}>
+                {saved ? <><Check size={14} /> Хадгаллаа!</> : saving ? "Хадгалж байна…" : "Хадгалах"}
+              </button>
+              <button type="button" disabled={deleting} onClick={async () => {
+                const confirmed = window.prompt(`Устгахдаа итгэлтэй байвал "${workspace?.name}" гэж бичнэ үү:`);
+                if (confirmed !== workspace?.name) { if (confirmed !== null) alert("Нэр буруу байна"); return; }
+                setDeleting(true);
+                try {
+                  await api.delete(`/workspaces/${workspaceId || workspace?.id}`);
+                  onClose(); navigate("/dashboard"); window.location.reload();
+                } catch (err) { alert(err.response?.data?.message || "Алдаа гарлаа"); }
+                finally { setDeleting(false); }
+              }} style={{ padding: "11px 16px", borderRadius: 10, border: "1px solid rgba(239,68,68,.3)", background: "rgba(239,68,68,.08)", color: "#f87171", fontSize: 13, fontWeight: 600, cursor: deleting ? "not-allowed" : "pointer", transition: "all .15s", whiteSpace: "nowrap" }}
+                onMouseEnter={e => { e.currentTarget.style.background = "#dc2626"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "#dc2626"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "rgba(239,68,68,.08)"; e.currentTarget.style.color = "#f87171"; e.currentTarget.style.borderColor = "rgba(239,68,68,.3)"; }}>
+                {deleting ? "Устгаж байна…" : "🗑 Устгах"}
+              </button>
+            </div>
           </form>
         )}
 
@@ -291,6 +343,167 @@ export default function WorkspaceSettingsModal({ workspace, workspaceId, onClose
             </div>
           </div>
         )}
+
+        {/* ── Tab: Roles ── */}
+        {tab === "roles" && (
+          <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+            {/* Role list */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 6 }}>
+              {myRole !== "OWNER" && (
+                <div style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(239,68,68,.06)", border: "1px solid rgba(239,68,68,.2)", fontSize: 12, color: "#f87171", marginBottom: 8 }}>
+                  Зөвхөн server owner roles удирдах эрхтэй.
+                </div>
+              )}
+              {roles.length === 0 && (
+                <div style={{ textAlign: "center", padding: "32px 0", color: P.muted, fontSize: 13 }}>
+                  <div style={{ fontSize: 28, marginBottom: 8 }}>🏷️</div>
+                  Roles байхгүй байна
+                </div>
+              )}
+              {roles.map(role => (
+                <div key={role.id} style={{
+                  display: "flex", alignItems: "center", gap: 10,
+                  padding: "10px 14px", borderRadius: 12,
+                  background: P.bg2, border: `1px solid ${P.border}`,
+                  transition: "border-color .15s",
+                }}>
+                  {editingRole?.id === role.id ? (
+                    <>
+                      <input type="color" value={editingRole.color}
+                        onChange={e => setEditingRole(p => ({ ...p, color: e.target.value }))}
+                        style={{ width: 32, height: 32, borderRadius: 8, border: "none", padding: 2, cursor: "pointer", background: "none", flexShrink: 0 }} />
+                      <input value={editingRole.name}
+                        onChange={e => setEditingRole(p => ({ ...p, name: e.target.value }))}
+                        onKeyDown={async e => {
+                          if (e.key === "Enter") {
+                            const wsId = workspaceId || workspace?.id;
+                            await api.patch(`/workspaces/${wsId}/roles/${role.id}`, { name: editingRole.name, color: editingRole.color });
+                            setRoles(p => p.map(r => r.id === role.id ? { ...r, ...editingRole } : r));
+                            setEditingRole(null);
+                          }
+                          if (e.key === "Escape") setEditingRole(null);
+                        }}
+                        style={{ flex: 1, padding: "6px 10px", borderRadius: 8, border: `1px solid ${P.bd2}`, background: P.inputBg, color: P.text, fontSize: 13, outline: "none", fontWeight: 600 }}
+                        autoFocus />
+                      <button onClick={async () => {
+                        const wsId = workspaceId || workspace?.id;
+                        await api.patch(`/workspaces/${wsId}/roles/${role.id}`, { name: editingRole.name, color: editingRole.color });
+                        setRoles(p => p.map(r => r.id === role.id ? { ...r, ...editingRole } : r));
+                        setEditingRole(null);
+                      }} style={{ padding: "5px 12px", borderRadius: 8, border: "none", background: "linear-gradient(135deg,#1B3066,#2a4080)", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>Save</button>
+                      <button onClick={() => setEditingRole(null)} style={{ padding: "5px 10px", borderRadius: 8, border: `1px solid ${P.border}`, background: "transparent", color: P.muted, fontSize: 12, cursor: "pointer" }}>Cancel</button>
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ width: 14, height: 14, borderRadius: "50%", background: role.color, flexShrink: 0, boxShadow: `0 0 6px ${role.color}66` }} />
+                      <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: role.color }}>{role.name}</span>
+                      <span style={{ fontSize: 11, color: P.muted, marginRight: 6 }}>
+                        {members.filter(m => m.workspaceRole?.id === role.id).length} members
+                      </span>
+                      {myRole === "OWNER" && (
+                        <>
+                          <button onClick={() => setEditingRole({ id: role.id, name: role.name, color: role.color })}
+                            style={{ padding: "4px 10px", borderRadius: 7, border: `1px solid ${P.border}`, background: "transparent", color: P.text3, fontSize: 11, cursor: "pointer" }}>Edit</button>
+                          <button onClick={async () => {
+                            const wsId = workspaceId || workspace?.id;
+                            await api.delete(`/workspaces/${wsId}/roles/${role.id}`);
+                            setRoles(p => p.filter(r => r.id !== role.id));
+                          }} style={{ width: 26, height: 26, borderRadius: 7, border: "1px solid rgba(239,68,68,.25)", background: "transparent", color: "#f87171", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+                        </>
+                      )}
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Add role — OWNER only */}
+            {myRole === "OWNER" && (
+              <div style={{ padding: "14px 20px", borderTop: `1px solid ${P.border}` }}>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <input type="color" value={newRoleColor} onChange={e => setNewRoleColor(e.target.value)}
+                    style={{ width: 38, height: 38, borderRadius: 10, border: `1px solid ${P.border}`, padding: 3, cursor: "pointer", background: "none", flexShrink: 0 }} />
+                  <input value={newRoleName} onChange={e => setNewRoleName(e.target.value)}
+                    placeholder="Role нэр оруулах…"
+                    onKeyDown={async e => {
+                      if (e.key !== "Enter" || !newRoleName.trim()) return;
+                      const wsId = workspaceId || workspace?.id;
+                      const res = await api.post(`/workspaces/${wsId}/roles`, { name: newRoleName.trim(), color: newRoleColor });
+                      setRoles(p => [...p, res.data.data]);
+                      setNewRoleName(""); setNewRoleColor("#6B7399");
+                    }}
+                    style={{ flex: 1, padding: "9px 12px", borderRadius: 10, border: `1px solid ${P.bd2}`, background: P.inputBg, color: P.text, fontSize: 13, outline: "none" }} />
+                  <button onClick={async () => {
+                    if (!newRoleName.trim()) return;
+                    const wsId = workspaceId || workspace?.id;
+                    const res = await api.post(`/workspaces/${wsId}/roles`, { name: newRoleName.trim(), color: newRoleColor });
+                    setRoles(p => [...p, res.data.data]);
+                    setNewRoleName(""); setNewRoleColor("#6B7399");
+                  }} style={{ padding: "9px 16px", borderRadius: 10, border: "none", background: "linear-gradient(135deg,#1B3066,#2a4080)", color: "#F0F0F5", fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
+                    + Add
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Tab: Members ── */}
+        {tab === "members" && (
+          <div style={{ display: "flex", flexDirection: "column", height: "100%", overflowY: "auto" }}>
+            <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 6 }}>
+              {myRole !== "OWNER" && (
+                <div style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(239,68,68,.06)", border: "1px solid rgba(239,68,68,.2)", fontSize: 12, color: "#f87171", marginBottom: 4 }}>
+                  Зөвхөн server owner role оноох эрхтэй.
+                </div>
+              )}
+              {members.filter(m => m.role !== "OWNER").length === 0 && (
+                <div style={{ textAlign: "center", padding: "32px 0", color: P.muted, fontSize: 13 }}>
+                  <div style={{ fontSize: 28, marginBottom: 8 }}>👥</div>
+                  Гишүүд байхгүй
+                </div>
+              )}
+              {members.filter(m => m.role !== "OWNER").map(member => {
+                const gradients = ["linear-gradient(135deg,#3b82f6,#6366f1)","linear-gradient(135deg,#8b5cf6,#ec4899)","linear-gradient(135deg,#06b6d4,#3b82f6)","linear-gradient(135deg,#10b981,#06b6d4)","linear-gradient(135deg,#f59e0b,#ef4444)"];
+                const grad = gradients[member.username?.charCodeAt(0) % gradients.length];
+                return (
+                  <div key={member.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, background: P.bg2, border: `1px solid ${P.border}` }}>
+                    {member.avatar
+                      ? <img src={member.avatar} alt="" style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
+                      : <div style={{ width: 34, height: 34, borderRadius: "50%", background: grad, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff", flexShrink: 0 }}>{member.username?.[0]?.toUpperCase()}</div>
+                    }
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: P.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{member.username}</div>
+                      {member.workspaceRole
+                        ? <div style={{ fontSize: 11, color: member.workspaceRole.color, fontWeight: 600 }}>{member.workspaceRole.name}</div>
+                        : <div style={{ fontSize: 11, color: P.muted }}>No role</div>
+                      }
+                    </div>
+                    {myRole === "OWNER" && (
+                      <select
+                        value={member.workspaceRole?.id || ""}
+                        onChange={async e => {
+                          const wsId = workspaceId || workspace?.id;
+                          const roleId = e.target.value || null;
+                          await api.patch(`/workspaces/${wsId}/members/${member.id}/role`, { roleId });
+                          setMembers(p => p.map(m => m.id === member.id
+                            ? { ...m, workspaceRole: roles.find(r => r.id === roleId) || null }
+                            : m
+                          ));
+                        }}
+                        style={{ padding: "6px 10px", borderRadius: 9, border: `1px solid ${P.bd2}`, background: P.inputBg, color: P.text, fontSize: 12, cursor: "pointer", outline: "none", maxWidth: 120 }}
+                      >
+                        <option value="">No role</option>
+                        {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                      </select>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
       </div>
       <style>{`
         @keyframes fadeIn  { from{opacity:0} to{opacity:1} }

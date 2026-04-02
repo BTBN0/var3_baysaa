@@ -1,117 +1,162 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../context/AuthContext.jsx";
-import { Edit2, Trash2, Pin, CornerUpLeft } from "lucide-react";
-import Picker from "@emoji-mart/react";
-import data from "@emoji-mart/data";
+import { Edit2, Trash2, Pin, CornerUpLeft, Smile } from "lucide-react";
 import api from "../../api/axios.js";
 import UserProfilePopup from "../ui/UserProfilePopup.jsx";
 import VoiceMessage from "./VoiceMessage.jsx";
+import { imgUrl } from "../../utils/url.js";
 
-const formatTime = (dateStr) => {
-  const date = new Date(dateStr);
-  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-};
+const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:3000/api").replace("/api", "");
 
-const formatDate = (dateStr) => {
-  const date = new Date(dateStr);
-  const today = new Date();
-  const yesterday = new Date(today);
+const QUICK = ["👍","❤️","😂","😮","😢","🔥","✅","😍"];
+
+const formatTime = d => new Date(d).toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
+const formatDate = d => {
+  const date = new Date(d), today = new Date(), yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
-  if (date.toDateString() === today.toDateString()) return "Today";
-  if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
-  return date.toLocaleDateString([], { month: "long", day: "numeric" });
+  if (date.toDateString() === today.toDateString()) return "Өнөөдөр";
+  if (date.toDateString() === yesterday.toDateString()) return "Өчигдөр";
+  return date.toLocaleDateString([], { month:"long", day:"numeric" });
 };
 
+// ── Avatar ────────────────────────────────────────────────────────────────
 const UserAvatar = ({ user, size = 32, onClick }) => {
-  const gradients = ["linear-gradient(135deg,#3b82f6,#6366f1)", "linear-gradient(135deg,#8b5cf6,#ec4899)", "linear-gradient(135deg,#06b6d4,#3b82f6)", "linear-gradient(135deg,#10b981,#06b6d4)", "linear-gradient(135deg,#f59e0b,#ef4444)"];
-  const gradient = gradients[user?.username?.charCodeAt(0) % gradients.length] || gradients[0];
-  if (user?.avatar) return <img src={user.avatar} alt={user.username} onClick={onClick} style={{ width: size, height: size, borderRadius: "50%", objectFit: "cover", cursor: "pointer", flexShrink: 0 }} />;
+  const grads = ["linear-gradient(135deg,#1B3066,#2a4080)","linear-gradient(135deg,#2a4080,#6B7399)","linear-gradient(135deg,#6B7399,#080B2A)","linear-gradient(135deg,#080B2A,#1B3066)"];
+  const grad = grads[(user?.username?.charCodeAt(0)||0) % grads.length];
+  const src = user?.avatar ? imgUrl(user.avatar) : null;
+  if (src) return <img src={src} alt={user.username} onClick={onClick} style={{ width:size, height:size, borderRadius:"50%", objectFit:"cover", cursor:"pointer", flexShrink:0 }} />;
   return (
-    <div onClick={onClick} style={{ width: size, height: size, borderRadius: "50%", background: gradient, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: size * 0.38, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>
+    <div onClick={onClick} style={{ width:size, height:size, borderRadius:"50%", background:grad, display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontSize:size*.38, fontWeight:700, cursor:"pointer", flexShrink:0 }}>
       {user?.username?.[0]?.toUpperCase()}
     </div>
   );
 };
 
-const FileAttachment = ({ fileUrl, fileType, isOwn }) => {
+// ── File attachment ────────────────────────────────────────────────────────
+const FileAttachment = ({ fileUrl, fileType }) => {
   if (!fileUrl) return null;
-  if (fileType?.startsWith("audio/")) {
-    return <VoiceMessage fileUrl={fileUrl} isOwn={isOwn} />;
-  }
-  if (!fileUrl) return null;
-  const isImage = fileType?.startsWith("image/");
+  const full = fileUrl.startsWith("http") ? fileUrl : API_BASE + fileUrl;
+  if (fileType?.startsWith("audio/")) return <VoiceMessage fileUrl={full} />;
+  if (fileType?.startsWith("image/")) return (
+    <a href={full} target="_blank" rel="noreferrer" style={{ display:"block", marginTop:8 }}>
+      <img src={full} alt="attachment" style={{ maxWidth:320, maxHeight:240, borderRadius:10, border:"1px solid var(--border)", objectFit:"cover", display:"block" }} />
+    </a>
+  );
   const filename = fileUrl.split("/").pop();
   const ext = filename.split(".").pop().toUpperCase();
-  if (isImage) {
-    return (
-      <a href={fileUrl} target="_blank" rel="noreferrer" style={{ display: "block", marginTop: 8 }}>
-        <img src={fileUrl} alt="attachment" style={{ maxWidth: 320, maxHeight: 240, borderRadius: 10, border: "1px solid var(--border)", objectFit: "cover", display: "block" }} />
-      </a>
-    );
-  }
   return (
-    <a href={fileUrl} target="_blank" rel="noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 8, marginTop: 8, padding: "8px 12px", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 9, textDecoration: "none", transition: "border-color 0.15s" }}>
-      <span style={{ fontSize: 10, fontWeight: 700, color: "var(--text3)", background: "var(--surface3)", padding: "2px 6px", borderRadius: 4 }}>{ext}</span>
-      <span style={{ fontSize: 13, color: "var(--text3)", maxWidth: 240, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{filename}</span>
-      <span style={{ fontSize: 12, color: "var(--text5)" }}>↗</span>
+    <a href={full} target="_blank" rel="noreferrer" style={{ display:"inline-flex", alignItems:"center", gap:8, marginTop:8, padding:"8px 12px", background:"var(--surface2)", border:"1px solid var(--border)", borderRadius:9, textDecoration:"none" }}>
+      <span style={{ fontSize:10, fontWeight:700, color:"var(--text3)", background:"var(--surface3)", padding:"2px 6px", borderRadius:4 }}>{ext}</span>
+      <span style={{ fontSize:13, color:"var(--text3)", maxWidth:200, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{filename}</span>
+      <span style={{ fontSize:12, color:"var(--text5)" }}>↗</span>
     </a>
   );
 };
 
-const ReactionBar = ({ reactions = [], onReaction, messageId, currentUserId }) => {
-  const [showPicker, setShowPicker] = useState(false);
-  const pickerRef = useRef(null);
-
+// ── Emoji quick picker — Discord style ────────────────────────────────────
+const EmojiPicker = ({ onSelect, onClose, anchorRef }) => {
+  const ref = useRef(null);
   useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (pickerRef.current && !pickerRef.current.contains(e.target)) setShowPicker(false);
+    const fn = e => {
+      if (ref.current && !ref.current.contains(e.target) &&
+          anchorRef?.current && !anchorRef.current.contains(e.target)) onClose();
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    setTimeout(() => document.addEventListener("mousedown", fn), 0);
+    return () => document.removeEventListener("mousedown", fn);
   }, []);
 
+  return (
+    <div ref={ref} style={{
+      position:"absolute", right:0, bottom:"calc(100% + 6px)", zIndex:200,
+      background:"#1B1F2E",
+      border:"1px solid rgba(107,115,153,0.3)",
+      borderRadius:12, padding:"8px 10px",
+      display:"flex", gap:2,
+      boxShadow:"0 12px 32px rgba(0,0,0,0.5)",
+      animation:"popIn .12s cubic-bezier(0.34,1.56,0.64,1) both",
+    }}>
+      {/* Arrow */}
+      <div style={{
+        position:"absolute", bottom:-5, right:14,
+        width:10, height:10, background:"#1B1F2E",
+        border:"1px solid rgba(107,115,153,0.3)",
+        borderTop:"none", borderLeft:"none",
+        transform:"rotate(45deg)",
+      }} />
+      {QUICK.map(emoji => (
+        <button key={emoji} onClick={() => { onSelect(emoji); onClose(); }} style={{
+          width:36, height:36, borderRadius:8, border:"none",
+          background:"transparent", cursor:"pointer",
+          fontSize:20, display:"flex", alignItems:"center", justifyContent:"center",
+          transition:"all .1s", lineHeight:1,
+        }}
+          onMouseEnter={ev => { ev.currentTarget.style.background = "rgba(255,255,255,0.1)"; ev.currentTarget.style.transform = "scale(1.2)"; }}
+          onMouseLeave={ev => { ev.currentTarget.style.background = "transparent"; ev.currentTarget.style.transform = "scale(1)"; }}>
+          {emoji}
+        </button>
+      ))}
+    </div>
+  );
+};
+
+// ── Reaction bar ───────────────────────────────────────────────────────────
+const ReactionBar = ({ reactions=[], onReaction, messageId, currentUserId }) => {
   const grouped = reactions.reduce((acc, r) => {
     if (!acc[r.emoji]) acc[r.emoji] = [];
     acc[r.emoji].push(r);
     return acc;
   }, {});
-
-  if (Object.keys(grouped).length === 0 && !showPicker) return null;
-
+  if (Object.keys(grouped).length === 0) return null;
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap", marginTop: 6 }}>
+    <div style={{ display:"flex", alignItems:"center", gap:3, flexWrap:"wrap", marginTop:4 }}>
       {Object.entries(grouped).map(([emoji, users]) => {
-        const hasReacted = users.some((u) => u.user?.id === currentUserId);
+        const mine  = users.some(u => u.user?.id === currentUserId);
+        const names = users.map(u => u.user?.username).filter(Boolean).join(", ");
         return (
           <button key={emoji} onClick={() => onReaction(messageId, emoji)}
-            style={{ display: "flex", alignItems: "center", gap: 4, padding: "2px 8px", background: hasReacted ? "rgba(255,255,255,0.06)" : "var(--surface2)", border: `1px solid ${hasReacted ? "var(--border2)" : "var(--border)"}`, borderRadius: 20, cursor: "pointer", fontSize: 12, color: "var(--text3)", transition: "all 0.15s" }}>
+            title={names}
+            style={{
+              display:"flex", alignItems:"center", gap:3, padding:"2px 7px",
+              background: mine ? "rgba(27,48,102,0.35)" : "var(--surface2)",
+              border:`1px solid ${mine ? "var(--border2)" : "var(--border)"}`,
+              borderRadius:20, cursor:"pointer", fontSize:13, transition:"all .1s",
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = "rgba(27,48,102,0.3)"}
+            onMouseLeave={e => e.currentTarget.style.background = mine ? "rgba(27,48,102,0.35)" : "var(--surface2)"}>
             <span>{emoji}</span>
-            <span style={{ fontSize: 11, color: "var(--text4)" }}>{users.length}</span>
+            <span style={{ fontSize:11, color:"var(--text4)", fontWeight:600 }}>{users.length}</span>
           </button>
         );
       })}
-      <div style={{ position: "relative" }} ref={pickerRef}>
-        <button onClick={() => setShowPicker((p) => !p)}
-          style={{ display: "flex", alignItems: "center", padding: "2px 7px", background: "transparent", border: "1px solid transparent", borderRadius: 20, cursor: "pointer", fontSize: 12, color: "var(--text5)", transition: "all 0.15s" }}
-          onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text3)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.borderColor = "transparent"; e.currentTarget.style.color = "var(--text5)"; }}>
-          + 😊
-        </button>
-        {showPicker && (
-          <div style={{ position: "absolute", bottom: 28, left: 0, zIndex: 50 }}>
-            <Picker data={data} onEmojiSelect={(emoji) => { onReaction(messageId, emoji.native); setShowPicker(false); }} theme="dark" previewPosition="none" skinTonePosition="none" />
-          </div>
-        )}
-      </div>
     </div>
   );
 };
 
+// ── Reply preview ──────────────────────────────────────────────────────────
+const ReplyPreview = ({ replyTo }) => {
+  const rt = (() => {
+    if (!replyTo) return null;
+    if (typeof replyTo === "string") { try { return JSON.parse(replyTo); } catch { return null; } }
+    return replyTo;
+  })();
+  if (!rt) return null;
+  return (
+    <div style={{ display:"flex", gap:6, padding:"3px 8px", marginBottom:4, borderRadius:6, background:"rgba(107,115,153,0.1)", borderLeft:"2px solid #6B7399" }}>
+      <CornerUpLeft size={10} style={{ color:"#6B7399", flexShrink:0, marginTop:2 }} />
+      <span style={{ fontSize:11, color:"#6B7399", fontWeight:600 }}>{rt.username} </span>
+      <span style={{ fontSize:11, color:"var(--text5)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth:220 }}>{rt.content}</span>
+    </div>
+  );
+};
+
+// ── Message Item ───────────────────────────────────────────────────────────
 const MessageItem = ({ msg, isOwn, showAvatar, showDate, onReaction, onEdit, onDelete, onPin, onReply, onAvatarClick, currentUserId, socket, channelId }) => {
-  const [editing, setEditing] = useState(false);
-  const [editContent, setEditContent] = useState(msg.content || "");
   const [showActions, setShowActions] = useState(false);
-  const inputRef = useRef(null);
+  const [showEmoji,   setShowEmoji]   = useState(false);
+  const [editing,     setEditing]     = useState(false);
+  const [editContent, setEditContent] = useState(msg.content || "");
+  const inputRef      = useRef(null);
+  const emojiAnchorRef = useRef(null);
 
   useEffect(() => {
     if (editing && inputRef.current) {
@@ -130,135 +175,111 @@ const MessageItem = ({ msg, isOwn, showAvatar, showDate, onReaction, onEdit, onD
     } catch (err) { console.error(err); }
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleEditSubmit(); }
-    if (e.key === "Escape") { setEditing(false); setEditContent(msg.content || ""); }
-  };
-
   return (
     <>
       {showDate && (
-        <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "16px 0 8px", padding: "0 4px" }}>
-          <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
-          <span style={{ fontSize: 11, color: "var(--text5)", fontWeight: 500, whiteSpace: "nowrap" }}>{formatDate(msg.createdAt)}</span>
-          <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
+        <div style={{ display:"flex", alignItems:"center", gap:10, margin:"16px 0 8px", padding:"0 4px" }}>
+          <div style={{ flex:1, height:1, background:"var(--border)" }} />
+          <span style={{ fontSize:11, color:"var(--text5)", fontWeight:500, whiteSpace:"nowrap" }}>{formatDate(msg.createdAt)}</span>
+          <div style={{ flex:1, height:1, background:"var(--border)" }} />
         </div>
       )}
       <div
         onMouseEnter={() => setShowActions(true)}
-        onMouseLeave={() => setShowActions(false)}
-        style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: showAvatar ? "8px 4px 2px" : "1px 4px", borderRadius: 8, background: showActions ? "rgba(107,115,153,0.1)" : "transparent", position: "relative", borderLeft: msg.pinned ? "2px solid var(--accent)" : "2px solid transparent", paddingLeft: msg.pinned ? 10 : 4, transition: "background 0.15s", animation: showAvatar ? "slideInRight .2s cubic-bezier(0.22,1,0.36,1) both" : "none" }}
+        onMouseLeave={() => { setShowActions(false); setShowEmoji(false); }}
+        style={{
+          display:"flex", alignItems:"flex-start", gap:10,
+          padding: showAvatar ? "8px 4px 2px" : "1px 4px",
+          borderRadius:8,
+          background: showActions ? "rgba(107,115,153,0.08)" : "transparent",
+          position:"relative",
+          borderLeft: msg.pinned ? "2px solid var(--border2)" : "2px solid transparent",
+          paddingLeft: msg.pinned ? 10 : 4,
+          transition:"background .1s",
+          animation: showAvatar ? "slideInRight .18s cubic-bezier(0.22,1,0.36,1) both" : "none",
+        }}
       >
-        <div style={{ width: 36, flexShrink: 0, paddingTop: showAvatar ? 0 : 0 }}>
-          {showAvatar && <UserAvatar user={msg.user} size={32} onClick={(e) => onAvatarClick(e, msg.user)} />}
+        {/* Avatar column */}
+        <div style={{ width:36, flexShrink:0 }}>
+          {showAvatar && <UserAvatar user={msg.user} size={32} onClick={e => onAvatarClick(e, msg.user)} />}
         </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
+
+        {/* Content */}
+        <div style={{ flex:1, minWidth:0 }}>
           {showAvatar && (
-            <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 2 }}>
-              <span onClick={(e) => onAvatarClick(e, msg.user)} style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", cursor: "pointer" }}
-                onMouseEnter={(e) => e.currentTarget.style.textDecoration = "underline"}
-                onMouseLeave={(e) => e.currentTarget.style.textDecoration = "none"}>
+            <div style={{ display:"flex", alignItems:"baseline", gap:8, marginBottom:2 }}>
+              <span onClick={e => onAvatarClick(e, msg.user)} style={{ fontSize:13, fontWeight:700, color:"var(--text)", cursor:"pointer" }}
+                onMouseEnter={e => e.currentTarget.style.textDecoration = "underline"}
+                onMouseLeave={e => e.currentTarget.style.textDecoration = "none"}>
                 {msg.user?.username}
               </span>
-              <span style={{ fontSize: 11, color: "var(--text5)" }}>{formatTime(msg.createdAt)}</span>
-              {msg.updatedAt !== msg.createdAt && <span style={{ fontSize: 10, color: "var(--text5)", fontStyle: "italic" }}>(edited)</span>}
-              {msg.pinned && <span style={{ fontSize: 10, color: "var(--text5)" }}>· 📌</span>}
+              <span style={{ fontSize:11, color:"var(--text5)" }}>{formatTime(msg.createdAt)}</span>
+              {msg.updatedAt && msg.updatedAt !== msg.createdAt && <span style={{ fontSize:10, color:"var(--text5)", fontStyle:"italic" }}>(засагдсан)</span>}
+              {msg.pinned && <span style={{ fontSize:10, color:"var(--text5)" }}>· 📌</span>}
             </div>
           )}
 
-          {msg.deleted ? (
-            <p style={{ fontSize: 13, color: "var(--text5)", fontStyle: "italic" }}>Message deleted</p>
-          ) : editing ? (
-            <div>
-              <input ref={inputRef} value={editContent} onChange={(e) => setEditContent(e.target.value)} onKeyDown={handleKeyDown}
-                style={{ width: "100%", background: "var(--surface2)", border: "1px solid var(--border2)", borderRadius: 8, padding: "8px 12px", color: "var(--text)", fontSize: 13, outline: "none" }} />
-              <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
-                <button onClick={handleEditSubmit} style={{ padding: "4px 12px", background: "linear-gradient(135deg,#1B3066,#2a4080)", border: "none", borderRadius: 6, color: "#F0F0F5", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Хадгалах</button>
-                <button onClick={() => { setEditing(false); setEditContent(msg.content || ""); }} style={{ padding: "4px 12px", background: "var(--surface2)", border: "none", borderRadius: 6, color: "var(--text4)", fontSize: 11, cursor: "pointer" }}>Болих</button>
-                <span style={{ fontSize: 11, color: "var(--text5)", alignSelf: "center" }}>Enter · Esc</span>
-              </div>
-            </div>
-          ) : (
-            <>
-              {/* Reply-to preview */}
-              {msg.replyTo && (() => {
-                const rt = typeof msg.replyTo === "string" ? (() => { try { return JSON.parse(msg.replyTo); } catch { return null; } })() : msg.replyTo;
-                if (!rt) return null;
-                return (
-                  <div style={{
-                    display: "flex", alignItems: "flex-start", gap: 6,
-                    padding: "5px 8px", marginBottom: 4, borderRadius: 6,
-                    background: "rgba(107,115,153,0.1)",
-                    borderLeft: "2px solid #6B7399",
-                  }}>
-                    <CornerUpLeft size={10} style={{ color: "var(--text5)", flexShrink: 0, marginTop: 2 }} />
-                    <div style={{ minWidth: 0 }}>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: "#6B7399" }}>{rt.username} </span>
-                      <span style={{ fontSize: 11, color: "var(--text5)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "inline-block", maxWidth: 200 }}>
-                        {rt.content}
-                      </span>
-                    </div>
+          <ReplyPreview replyTo={msg.replyTo} />
+
+          {msg.deleted
+            ? <p style={{ fontSize:13, color:"var(--text5)", fontStyle:"italic", margin:0 }}>Мессеж устгагдсан</p>
+            : editing
+              ? (
+                <div>
+                  <input ref={inputRef} value={editContent} onChange={e => setEditContent(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleEditSubmit(); } if (e.key === "Escape") { setEditing(false); setEditContent(msg.content||""); } }}
+                    style={{ width:"100%", background:"var(--surface2)", border:"1px solid var(--border2)", borderRadius:8, padding:"8px 12px", color:"var(--text)", fontSize:13, outline:"none" }} />
+                  <div style={{ display:"flex", gap:6, marginTop:6 }}>
+                    <button onClick={handleEditSubmit} style={{ padding:"4px 12px", background:"linear-gradient(135deg,#1B3066,#2a4080)", border:"none", borderRadius:6, color:"#F0F0F5", fontSize:11, fontWeight:600, cursor:"pointer" }}>Хадгалах</button>
+                    <button onClick={() => { setEditing(false); setEditContent(msg.content||""); }} style={{ padding:"4px 12px", background:"var(--surface2)", border:"none", borderRadius:6, color:"var(--text4)", fontSize:11, cursor:"pointer" }}>Болих</button>
                   </div>
-                );
-              })()}
-              {msg.content && <p style={{ fontSize: 13, color: "var(--text3)", lineHeight: 1.6, wordBreak: "break-word" }}>{msg.content}</p>}
-              <FileAttachment fileUrl={msg.fileUrl} fileType={msg.fileType} />
-              <ReactionBar reactions={msg.reactions || []} onReaction={onReaction} messageId={msg.id} currentUserId={currentUserId} />
-              {/* Reply thread count */}
-              {msg.thread?.replies?.length > 0 && (
-                <button onClick={() => onReply?.(msg)} style={{
-                  display: "inline-flex", alignItems: "center", gap: 5,
-                  marginTop: 4, padding: "3px 8px", borderRadius: 6,
-                  background: "rgba(27,48,102,0.2)", border: "1px solid rgba(107,115,153,0.25)",
-                  color: "#6B7399", fontSize: 11, fontWeight: 600, cursor: "pointer",
-                  transition: "all .15s",
-                }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(27,48,102,0.35)"; e.currentTarget.style.color = "#b8bdd8"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(27,48,102,0.2)"; e.currentTarget.style.color = "#6B7399"; }}>
-                  <CornerUpLeft size={10} />
-                  {msg.thread.replies.length} {msg.thread.replies.length === 1 ? "reply" : "replies"}
-                </button>
-              )}
-            </>
-          )}
+                </div>
+              )
+              : <>
+                  {msg.content && <p style={{ fontSize:13, color:"var(--text3)", lineHeight:1.6, wordBreak:"break-word", margin:0 }}>{msg.content}</p>}
+                  <FileAttachment fileUrl={msg.fileUrl} fileType={msg.fileType} />
+                  {msg.thread?.replies?.length > 0 && (
+                    <button onClick={() => onReply?.(msg)} style={{ display:"inline-flex", alignItems:"center", gap:5, marginTop:4, padding:"3px 8px", borderRadius:6, background:"rgba(27,48,102,0.2)", border:"1px solid rgba(107,115,153,0.25)", color:"#6B7399", fontSize:11, fontWeight:600, cursor:"pointer", transition:"all .15s" }}
+                      onMouseEnter={e => { e.currentTarget.style.background = "rgba(27,48,102,0.35)"; e.currentTarget.style.color = "#b8bdd8"; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = "rgba(27,48,102,0.2)"; e.currentTarget.style.color = "#6B7399"; }}>
+                      <CornerUpLeft size={10} />
+                      {msg.thread.replies.length} хариу
+                    </button>
+                  )}
+                  <ReactionBar reactions={msg.reactions||[]} onReaction={onReaction} messageId={msg.id} currentUserId={currentUserId} />
+                </>
+          }
         </div>
 
-        {/* Hover actions */}
+        {/* Hover action bar */}
         {showActions && !msg.deleted && !editing && (
-          <div style={{ position: "absolute", right: 8, top: showAvatar ? 6 : -8, display: "flex", alignItems: "center", gap: 2, background: "var(--surface2)", border: "1px solid var(--border2)", borderRadius: 8, padding: "3px 4px", boxShadow: "0 4px 12px rgba(0,0,0,0.3)", zIndex: 10 }}>
-            {/* Reply button */}
-            <button onClick={() => onReply?.(msg)}
-              style={{ width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer", color: "var(--text5)", borderRadius: 5, transition: "all 0.1s" }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface3)"; e.currentTarget.style.color = "var(--text)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "var(--text5)"; }}
-              title="Reply">
-              <CornerUpLeft size={12} />
-            </button>
-            {isOwn && (
-              <button onClick={() => { setEditing(true); setEditContent(msg.content || ""); }}
-                style={{ width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer", color: "var(--text5)", borderRadius: 5, transition: "all 0.1s" }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface3)"; e.currentTarget.style.color = "var(--text)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "var(--text5)"; }}
-                title="Edit">
-                <Edit2 size={12} />
-              </button>
-            )}
-            <button onClick={() => onPin(msg)}
-              style={{ width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer", color: msg.pinned ? "var(--text)" : "var(--text5)", borderRadius: 5, transition: "all 0.1s" }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface3)"; e.currentTarget.style.color = "var(--text)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = msg.pinned ? "var(--text)" : "var(--text5)"; }}
-              title={msg.pinned ? "Unpin" : "Pin"}>
-              <Pin size={12} />
-            </button>
-            {isOwn && (
-              <button onClick={() => onDelete(msg.id)}
-                style={{ width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer", color: "var(--text5)", borderRadius: 5, transition: "all 0.1s" }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(239,68,68,0.1)"; e.currentTarget.style.color = "#fca5a5"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "var(--text5)"; }}
-                title="Delete">
-                <Trash2 size={12} />
-              </button>
-            )}
+          <div style={{
+            position:"absolute", right:8, top: showAvatar ? 6 : -14,
+            display:"flex", alignItems:"center", gap:2,
+            background:"var(--surface)", border:"1px solid var(--border2)",
+            borderRadius:10, padding:"3px 5px",
+            boxShadow:"0 4px 16px rgba(0,0,0,0.25)", zIndex:20,
+          }}>
+            {/* Quick emoji */}
+            <div style={{ position:"relative" }} ref={emojiAnchorRef}>
+              <ActionBtn onClick={() => setShowEmoji(p => !p)} title="Emoji реакц нэмэх" active={showEmoji}>
+                <Smile size={13} />
+              </ActionBtn>
+              {showEmoji && (
+                <EmojiPicker
+                  onSelect={e => onReaction(msg.id, e)}
+                  onClose={() => setShowEmoji(false)}
+                  anchorRef={emojiAnchorRef}
+                />
+              )}
+            </div>
+
+            <div style={{ width:1, height:16, background:"var(--border)", margin:"0 1px" }} />
+
+            <ActionBtn onClick={() => onReply?.(msg)} title="Хариулах"><CornerUpLeft size={13} /></ActionBtn>
+            {isOwn && <ActionBtn onClick={() => { setEditing(true); setEditContent(msg.content||""); }} title="Засах"><Edit2 size={13} /></ActionBtn>}
+            <ActionBtn onClick={() => onPin(msg)} title={msg.pinned ? "Тогтоолтыг арилгах" : "Тогтоох"} active={msg.pinned}><Pin size={13} /></ActionBtn>
+            {isOwn && <ActionBtn onClick={() => onDelete(msg.id)} title="Устгах" danger><Trash2 size={13} /></ActionBtn>}
           </div>
         )}
       </div>
@@ -266,64 +287,72 @@ const MessageItem = ({ msg, isOwn, showAvatar, showDate, onReaction, onEdit, onD
   );
 };
 
+const ActionBtn = ({ onClick, title, danger, active, children }) => (
+  <button onClick={onClick} title={title} style={{
+    width:28, height:28, display:"flex", alignItems:"center", justifyContent:"center",
+    background:"none", border:"none", cursor:"pointer",
+    color: active ? "var(--text)" : danger ? "var(--text5)" : "var(--text5)",
+    borderRadius:6, transition:"all .1s",
+  }}
+    onMouseEnter={e => { e.currentTarget.style.background = danger ? "rgba(239,68,68,0.12)" : "var(--surface2)"; e.currentTarget.style.color = danger ? "#fca5a5" : "var(--text)"; }}
+    onMouseLeave={e => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = active ? "var(--text)" : "var(--text5)"; }}>
+    {children}
+  </button>
+);
+
+// ── MessageList ───────────────────────────────────────────────────────────
 const MessageList = ({ messages, typingUsers, onReaction, onEdit, onDelete, onPin, onReply, socket, channelId }) => {
   const { user } = useAuth();
   const bottomRef = useRef(null);
   const [profilePopup, setProfilePopup] = useState(null);
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, typingUsers]);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior:"smooth" }); }, [messages, typingUsers]);
 
-  const handleAvatarClick = (e, clickedUser) => {
+  const onAvatarClick = (e, u) => {
     e.stopPropagation();
-    setProfilePopup({ user: clickedUser, position: { x: e.clientX, y: e.clientY } });
+    setProfilePopup({ user: u, position: { x: e.clientX, y: e.clientY } });
   };
 
   return (
-    <div style={{ flex: 1, overflowY: "auto", padding: "8px 20px 8px", display: "flex", flexDirection: "column" }}>
+    <div style={{ flex:1, overflowY:"auto", padding:"8px 20px", display:"flex", flexDirection:"column" }}>
       {messages.length === 0 && (
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flex: 1, color: "var(--text5)", textAlign: "center" }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>💬</div>
-          <p style={{ fontSize: 14, fontWeight: 500, color: "var(--text4)", marginBottom: 4 }}>No messages yet</p>
-          <p style={{ fontSize: 13, color: "var(--text5)" }}>Be the first to say something!</p>
+        <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", flex:1, color:"var(--text5)", textAlign:"center" }}>
+          <div style={{ fontSize:40, marginBottom:12 }}>💬</div>
+          <p style={{ fontSize:14, fontWeight:500, color:"var(--text4)", marginBottom:4 }}>Мессеж байхгүй</p>
+          <p style={{ fontSize:13, color:"var(--text5)" }}>Эхний мессежийг илгээ!</p>
         </div>
       )}
 
       {messages.map((msg, i) => {
         const isOwn = msg.user?.id === user?.id;
-        const prevMsg = messages[i - 1];
-        const showAvatar = !prevMsg || prevMsg.user?.id !== msg.user?.id || (new Date(msg.createdAt) - new Date(prevMsg.createdAt)) > 5 * 60 * 1000;
-        const showDate = !prevMsg || new Date(msg.createdAt).toDateString() !== new Date(prevMsg.createdAt).toDateString();
-
+        const prev  = messages[i-1];
+        const showAvatar = !prev || prev.user?.id !== msg.user?.id || (new Date(msg.createdAt) - new Date(prev.createdAt)) > 5*60*1000;
+        const showDate   = !prev || new Date(msg.createdAt).toDateString() !== new Date(prev.createdAt).toDateString();
         return (
           <MessageItem key={msg.id} msg={msg} isOwn={isOwn} showAvatar={showAvatar} showDate={showDate}
             onReaction={onReaction} onEdit={onEdit} onDelete={onDelete} onPin={onPin} onReply={onReply}
-            onAvatarClick={handleAvatarClick} currentUserId={user?.id} socket={socket} channelId={channelId} />
+            onAvatarClick={onAvatarClick} currentUserId={user?.id} socket={socket} channelId={channelId} />
         );
       })}
 
-      {typingUsers.length > 0 && (
-        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 4px", marginTop: 4 }}>
-          <div style={{ width: 36 }} />
-          <div style={{ display: "flex", align: "center", gap: 6 }}>
-            <div style={{ display: "flex", gap: 3, alignItems: "center" }}>
-              {[0, 1, 2].map((i) => (
-                <span key={i} style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--text5)", display: "inline-block", animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />
-              ))}
-            </div>
-            <span style={{ fontSize: 12, color: "var(--text5)", fontStyle: "italic" }}>
-              {typingUsers.join(", ")} {typingUsers.length === 1 ? "is" : "are"} typing
-            </span>
+      {typingUsers?.length > 0 && (
+        <div style={{ display:"flex", alignItems:"center", gap:10, padding:"4px 4px 4px 46px", marginTop:4 }}>
+          <div style={{ display:"flex", gap:3, alignItems:"center" }}>
+            {[0,1,2].map(i => (
+              <span key={i} style={{ width:5, height:5, borderRadius:"50%", background:"var(--text5)", display:"inline-block", animation:`bounce 1.2s ease-in-out ${i*.2}s infinite` }} />
+            ))}
           </div>
+          <span style={{ fontSize:12, color:"var(--text5)", fontStyle:"italic" }}>
+            {typingUsers.join(", ")} {typingUsers.length === 1 ? "бичиж байна" : "бичиж байна"}
+          </span>
         </div>
       )}
 
       <style>{`
-        @keyframes bounce {
-          0%, 60%, 100% { transform: translateY(0); }
-          30% { transform: translateY(-4px); }
-        }
+        @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-4px)} }
+        @keyframes slideInRight { from{opacity:0;transform:translateX(-6px)} to{opacity:1;transform:translateX(0)} }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(6px) scale(.97)} to{opacity:1;transform:translateY(0) scale(1)} }
+        @keyframes popIn { from{opacity:0;transform:scale(.85) translateY(4px)} to{opacity:1;transform:scale(1) translateY(0)} }
       `}</style>
 
       <div ref={bottomRef} />

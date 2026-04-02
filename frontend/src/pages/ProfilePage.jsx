@@ -29,7 +29,7 @@ const SKINS = [
   {bg:"#FCE7F3",fg:"#BE185D"},{bg:"#D1FAE5",fg:"#065F46"},
 ];
 
-const API_BASE = (import.meta.env.VITE_API_URL||"http://localhost:3001/api").replace("/api","");
+const API_BASE = (import.meta.env.VITE_API_URL||"http://localhost:3000/api").replace("/api","");
 
 export default function ProfilePage({ onClose }) {
   const { user, logout, profile, saveProfile, updateProfile, updateAvatar } = useAuth();
@@ -168,12 +168,7 @@ export default function ProfilePage({ onClose }) {
               : <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>Dark</>
             }
           </button>
-          {/* macOS dots */}
-          <div style={{display:"flex",gap:5,marginLeft:4}}>
-            {["#ff5f56","#ffbd2e","#27c93f"].map(c=>(
-              <div key={c} style={{width:10,height:10,borderRadius:"50%",background:c}}/>
-            ))}
-          </div>
+          
         </div>
 
         {/* Cover */}

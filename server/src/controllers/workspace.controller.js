@@ -91,7 +91,37 @@ export const joinWorkspace = async (req, res, next) => {
     next(err);
   }
 };
+export const updateWorkspace = async (req, res, next) => {
+  try {
+    const { workspaceId } = req.params;
+    const { name, description } = req.body;
+    const userId = req.user.id;
 
+    const member = await prisma.workspaceMember.findUnique({
+      where: { userId_workspaceId: { userId, workspaceId } },
+    });
+
+    if (!member || member.role !== "OWNER") {
+      return res.status(403).json({
+        ok: false,
+        message: "Only owners can update workspace",
+      });
+    }
+
+    const workspace = await prisma.workspace.update({
+      where: { id: workspaceId },
+      data: { name, description },
+    });
+
+    res.json({
+      ok: true,
+      message: "Workspace updated",
+      data: workspace,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
 // GET /api/workspaces/:workspaceId/members
 export const getWorkspaceMembers = async (req, res, next) => {
   try {
@@ -103,6 +133,7 @@ export const getWorkspaceMembers = async (req, res, next) => {
         user: {
           select: { id: true, username: true, avatar: true, lastSeen: true },
         },
+        workspaceRole: true,
       },
       orderBy: { joinedAt: "asc" },
     });
@@ -110,7 +141,7 @@ export const getWorkspaceMembers = async (req, res, next) => {
     res.json({
       ok: true,
       message: "Members fetched",
-      data: members.map((m) => ({ ...m.user, role: m.role })),
+      data: members.map((m) => ({ ...m.user, role: m.role, workspaceRole: m.workspaceRole || null })),
     });
   } catch (err) {
     next(err);
@@ -169,9 +200,93 @@ export const getInvitePreview = async (req, res, next) => {
           where: { userId_workspaceId: { userId: decoded.id, workspaceId: workspace.id } },
         });
         if (member) return res.status(409).json({ ok: false, message: "Та аль хэдийн гишүүн байна", data: workspace });
-      } catch {}
+      } catch { }
     }
 
     res.json({ ok: true, data: { ...workspace, memberCount: workspace._count.members } });
+  } catch (err) { next(err); }
+};
+
+// POST /api/workspaces/:workspaceId/invite-user
+export const inviteUserToWorkspace = async (req, res, next) => {
+  try {
+    const { workspaceId } = req.params;
+    const { username }    = req.body;
+    const requesterId     = req.user.id;
+
+    // Only owner/admin can invite
+    const requester = await prisma.workspaceMember.findUnique({
+      where: { userId_workspaceId: { userId: requesterId, workspaceId } },
+    });
+    if (!requester || requester.role === "MEMBER") {
+      return res.status(403).json({ ok: false, message: "Зөвхөн эзэмшигч урилга явуулах эрхтэй" });
+    }
+
+    // Find user by username
+    const target = await prisma.user.findFirst({
+      where: { username: { equals: username, mode: "insensitive" } },
+      select: { id: true, username: true, avatar: true },
+    });
+    if (!target) return res.status(404).json({ ok: false, message: `"${username}" хэрэглэгч олдсонгүй` });
+    if (target.id === requesterId) return res.status(400).json({ ok: false, message: "Өөртөө урилга явуулах боломжгүй" });
+
+    // Already a member?
+    const existing = await prisma.workspaceMember.findUnique({
+      where: { userId_workspaceId: { userId: target.id, workspaceId } },
+    });
+    if (existing) return res.status(409).json({ ok: false, message: `${target.username} аль хэдийн гишүүн байна` });
+
+    // Banned?
+    const ban = await prisma.workspaceBan.findUnique({
+      where: { userId_workspaceId: { userId: target.id, workspaceId } },
+    });
+    if (ban) return res.status(403).json({ ok: false, message: `${target.username} энэ workspace-аас хасагдсан байна` });
+
+    // Add as member
+    await prisma.workspaceMember.create({
+      data: { userId: target.id, workspaceId, role: "MEMBER" },
+    });
+
+    res.json({ ok: true, message: `${target.username}-г workspace-д нэмлээ`, data: target });
+  } catch (err) { next(err); }
+};
+
+// DELETE /api/workspaces/:workspaceId — delete workspace (owner only)
+export const deleteWorkspace = async (req, res, next) => {
+  try {
+    const { workspaceId } = req.params;
+    const userId = req.user.id;
+
+    const member = await prisma.workspaceMember.findUnique({
+      where: { userId_workspaceId: { userId, workspaceId } },
+    });
+
+    if (!member || member.role !== "OWNER") {
+      return res.status(403).json({ ok: false, message: "Зөвхөн эзэмшигч устгах эрхтэй" });
+    }
+
+    await prisma.workspace.delete({ where: { id: workspaceId } });
+    res.json({ ok: true, message: "Workspace устгагдлаа" });
+  } catch (err) { next(err); }
+};
+
+// DELETE /api/workspaces/:workspaceId/leave — leave workspace (non-owner)
+export const leaveWorkspace = async (req, res, next) => {
+  try {
+    const { workspaceId } = req.params;
+    const userId = req.user.id;
+
+    const member = await prisma.workspaceMember.findUnique({
+      where: { userId_workspaceId: { userId, workspaceId } },
+    });
+
+    if (!member) return res.status(404).json({ ok: false, message: "Та энэ workspace-ийн гишүүн биш байна" });
+    if (member.role === "OWNER") return res.status(400).json({ ok: false, message: "Эзэмшигч workspace-г орхиж болохгүй. Эхлээд устга." });
+
+    await prisma.workspaceMember.delete({
+      where: { userId_workspaceId: { userId, workspaceId } },
+    });
+
+    res.json({ ok: true, message: "Workspace-аас гарлаа" });
   } catch (err) { next(err); }
 };

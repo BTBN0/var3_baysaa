@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { imgUrl, API_BASE } from "../utils/url.js";
 import { useNavigate } from "react-router-dom";
 import { Plus, LogOut, Copy, Check, Hash, Users, ChevronRight } from "lucide-react";
 import api from "../api/axios.js";
@@ -15,7 +16,7 @@ const WorkspaceAvatar = ({ workspace, size = 44 }) => {
     "linear-gradient(135deg,#ec4899,#f43f5e)",
   ];
   const gradient = gradients[workspace?.name?.charCodeAt(0) % gradients.length] || gradients[0];
-  if (workspace?.avatar) return <img src={workspace.avatar} alt={workspace.name} style={{ width: size, height: size, borderRadius: 12, objectFit: "cover", flexShrink: 0 }} />;
+  if (workspace?.avatar) return <img src={imgUrl(workspace.avatar)} alt={workspace.name} style={{ width: size, height: size, borderRadius: 12, objectFit: "cover", flexShrink: 0 }} />;
   return (
     <div style={{ width: size, height: size, borderRadius: 12, background: gradient, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: size * 0.38, fontWeight: 700, flexShrink: 0, boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>
       {workspace?.name?.[0]?.toUpperCase()}
@@ -26,7 +27,7 @@ const WorkspaceAvatar = ({ workspace, size = 44 }) => {
 const UserAvatar = ({ user, size = 32 }) => {
   const gradients = ["linear-gradient(135deg,#3b82f6,#6366f1)", "linear-gradient(135deg,#8b5cf6,#ec4899)", "linear-gradient(135deg,#06b6d4,#3b82f6)", "linear-gradient(135deg,#10b981,#06b6d4)"];
   const gradient = gradients[user?.username?.charCodeAt(0) % gradients.length] || gradients[0];
-  if (user?.avatar) return <img src={user.avatar} alt={user.username} style={{ width: size, height: size, borderRadius: "50%", objectFit: "cover" }} />;
+  if (user?.avatar) return <img src={imgUrl(user.avatar)} alt={user.username} style={{ width: size, height: size, borderRadius: "50%", objectFit: "cover" }} />;
   return (
     <div style={{ width: size, height: size, borderRadius: "50%", background: gradient, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: size * 0.38, fontWeight: 600 }}>
       {user?.username?.[0]?.toUpperCase()}

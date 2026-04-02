@@ -54,6 +54,7 @@ export const ModelName = {
   User: 'User',
   Workspace: 'Workspace',
   WorkspaceMember: 'WorkspaceMember',
+  WorkspaceRole: 'WorkspaceRole',
   Channel: 'Channel',
   Message: 'Message',
   Reaction: 'Reaction',
@@ -113,12 +114,25 @@ export type WorkspaceScalarFieldEnum = (typeof WorkspaceScalarFieldEnum)[keyof t
 export const WorkspaceMemberScalarFieldEnum = {
   id: 'id',
   role: 'role',
+  roleId: 'roleId',
   joinedAt: 'joinedAt',
   userId: 'userId',
   workspaceId: 'workspaceId'
 } as const
 
 export type WorkspaceMemberScalarFieldEnum = (typeof WorkspaceMemberScalarFieldEnum)[keyof typeof WorkspaceMemberScalarFieldEnum]
+
+
+export const WorkspaceRoleScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  color: 'color',
+  position: 'position',
+  createdAt: 'createdAt',
+  workspaceId: 'workspaceId'
+} as const
+
+export type WorkspaceRoleScalarFieldEnum = (typeof WorkspaceRoleScalarFieldEnum)[keyof typeof WorkspaceRoleScalarFieldEnum]
 
 
 export const ChannelScalarFieldEnum = {
@@ -167,6 +181,10 @@ export const DirectMessageScalarFieldEnum = {
   fileUrl: 'fileUrl',
   fileType: 'fileType',
   deleted: 'deleted',
+  edited: 'edited',
+  pinned: 'pinned',
+  replyTo: 'replyTo',
+  reactions: 'reactions',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   senderId: 'senderId',
@@ -282,11 +300,22 @@ export type WorkspaceOrderByRelevanceFieldEnum = (typeof WorkspaceOrderByRelevan
 export const WorkspaceMemberOrderByRelevanceFieldEnum = {
   id: 'id',
   role: 'role',
+  roleId: 'roleId',
   userId: 'userId',
   workspaceId: 'workspaceId'
 } as const
 
 export type WorkspaceMemberOrderByRelevanceFieldEnum = (typeof WorkspaceMemberOrderByRelevanceFieldEnum)[keyof typeof WorkspaceMemberOrderByRelevanceFieldEnum]
+
+
+export const WorkspaceRoleOrderByRelevanceFieldEnum = {
+  id: 'id',
+  name: 'name',
+  color: 'color',
+  workspaceId: 'workspaceId'
+} as const
+
+export type WorkspaceRoleOrderByRelevanceFieldEnum = (typeof WorkspaceRoleOrderByRelevanceFieldEnum)[keyof typeof WorkspaceRoleOrderByRelevanceFieldEnum]
 
 
 export const ChannelOrderByRelevanceFieldEnum = {

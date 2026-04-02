@@ -133,7 +133,7 @@ const ChatPage = () => {
         body.replyTo = { id: replyTo.id, content: replyTo.content, username: replyTo.user?.username };
       }
       const res = await api.post(`/messages/${channelId}`, body);
-      socket?.emit("send_message", res.data.data);
+      socket?.emit("send_message", { ...res.data.data, workspaceId, channelName: currentChannel?.name || channelId });
       setReplyTo(null);
     } catch (err) { console.error(err); }
   };
@@ -173,7 +173,13 @@ const ChatPage = () => {
       const reactionsRes = await api.get(`/reactions/${messageId}`);
       const reactions = reactionsRes.data.data;
       setMessages((prev) => prev.map((m) => m.id === messageId ? { ...m, reactions } : m));
-      socket?.emit("reaction_updated", { messageId, channelId, reactions });
+      // Find the message owner for targeted notification
+      const reactedMsg = messages.find(m => m.id === messageId);
+      socket?.emit("reaction_updated", {
+        messageId, channelId, reactions, emoji,
+        reactorId: user?.id, reactorName: user?.username,
+        messageOwnerId: reactedMsg?.user?.id,
+      });
     } catch (err) { console.error(err); }
   };
 
